@@ -2,6 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeftRight,
   Briefcase,
+  Building2,
   FileBarChart,
   Globe,
   LayoutDashboard,
@@ -9,8 +10,10 @@ import {
   PenSquare,
   RefreshCw,
   Settings,
+  Sparkles,
   TrendingUp,
 } from "lucide-react";
+import { useVersion } from "../context/VersionContext";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import { useGetCallerUserProfile, useIsCallerAdmin } from "../hooks/useQueries";
 
@@ -21,19 +24,35 @@ type Page =
   | "nav-update"
   | "capital-gains"
   | "settings"
-  | "blog-admin";
+  | "blog-admin"
+  | "advanced-features"
+  | "distributor-entry";
 
-const navItems: {
+const baseNavItems: {
   id: Page;
   label: string;
   icon: React.ElementType;
   adminOnly?: boolean;
+  advancedOnly?: boolean;
+  eliteOnly?: boolean;
 }[] = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "holdings", label: "Holdings", icon: Briefcase },
   { id: "transactions", label: "Transactions", icon: ArrowLeftRight },
   { id: "nav-update", label: "NAV Update", icon: RefreshCw },
   { id: "capital-gains", label: "Capital Gains", icon: FileBarChart },
+  {
+    id: "advanced-features",
+    label: "Advanced Features",
+    icon: Sparkles,
+    advancedOnly: true,
+  },
+  {
+    id: "distributor-entry",
+    label: "Distributor Entry",
+    icon: Building2,
+    eliteOnly: true,
+  },
   { id: "settings", label: "Settings", icon: Settings },
   { id: "blog-admin", label: "Blog Admin", icon: PenSquare, adminOnly: true },
 ];
@@ -53,6 +72,7 @@ export default function Sidebar({
   const qc = useQueryClient();
   const { data: profile } = useGetCallerUserProfile();
   const { data: isAdmin } = useIsCallerAdmin();
+  const { selectedVersion, currentVersion } = useVersion();
 
   const handleLogout = async () => {
     await clear();
@@ -68,8 +88,10 @@ export default function Sidebar({
         .slice(0, 2)
     : "U";
 
-  const visibleItems = navItems.filter((item) => {
+  const visibleItems = baseNavItems.filter((item) => {
     if (item.adminOnly) return !!isAdmin;
+    if (item.advancedOnly) return selectedVersion === "advanced";
+    if (item.eliteOnly) return selectedVersion === "elite";
     return true;
   });
 
@@ -92,9 +114,20 @@ export default function Sidebar({
           >
             Jagdish PMS
           </span>
-          <span className="text-xs" style={{ color: "oklch(0.60 0.02 240)" }}>
-            Portfolio Manager
-          </span>
+          <div className="flex items-center gap-1.5 mt-0.5">
+            <span className="text-xs" style={{ color: "oklch(0.60 0.02 240)" }}>
+              Portfolio Manager
+            </span>
+            <span
+              className="text-xs px-1.5 py-0.5 rounded font-medium"
+              style={{
+                background: "oklch(0.52 0.13 185 / 0.22)",
+                color: "oklch(0.70 0.12 185)",
+              }}
+            >
+              {currentVersion.label}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -103,40 +136,70 @@ export default function Sidebar({
       </div>
 
       <nav className="flex-1 px-3 py-2 space-y-0.5">
-        {visibleItems.map(({ id, label, icon: Icon, adminOnly }) => {
-          const isActive = currentPage === id;
-          return (
-            <button
-              key={id}
-              type="button"
-              data-ocid={`nav.${id}.link`}
-              onClick={() => onNavigate(id)}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
-              style={{
-                background: isActive ? "oklch(0.28 0.075 240)" : "transparent",
-                color: isActive
-                  ? "oklch(0.97 0.005 240)"
-                  : adminOnly
-                    ? "oklch(0.65 0.10 185)"
-                    : "oklch(0.70 0.02 240)",
-              }}
-            >
-              <Icon className="w-4 h-4 flex-shrink-0" />
-              {label}
-              {adminOnly && (
-                <span
-                  className="ml-auto text-xs px-1.5 py-0.5 rounded"
-                  style={{
-                    background: "oklch(0.52 0.13 185 / 0.18)",
-                    color: "oklch(0.60 0.12 185)",
-                  }}
-                >
-                  Admin
-                </span>
-              )}
-            </button>
-          );
-        })}
+        {visibleItems.map(
+          ({ id, label, icon: Icon, adminOnly, advancedOnly, eliteOnly }) => {
+            const isActive = currentPage === id;
+            return (
+              <button
+                key={id}
+                type="button"
+                data-ocid={`nav.${id}.link`}
+                onClick={() => onNavigate(id)}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
+                style={{
+                  background: isActive
+                    ? "oklch(0.28 0.075 240)"
+                    : "transparent",
+                  color: isActive
+                    ? "oklch(0.97 0.005 240)"
+                    : eliteOnly
+                      ? "oklch(0.62 0.13 160)"
+                      : advancedOnly
+                        ? "oklch(0.68 0.12 185)"
+                        : adminOnly
+                          ? "oklch(0.65 0.10 185)"
+                          : "oklch(0.70 0.02 240)",
+                }}
+              >
+                <Icon className="w-4 h-4 flex-shrink-0" />
+                {label}
+                {advancedOnly && (
+                  <span
+                    className="ml-auto text-xs px-1.5 py-0.5 rounded"
+                    style={{
+                      background: "oklch(0.52 0.13 185 / 0.18)",
+                      color: "oklch(0.60 0.12 185)",
+                    }}
+                  >
+                    v2
+                  </span>
+                )}
+                {eliteOnly && (
+                  <span
+                    className="ml-auto text-xs px-1.5 py-0.5 rounded"
+                    style={{
+                      background: "oklch(0.52 0.13 160 / 0.18)",
+                      color: "oklch(0.48 0.12 160)",
+                    }}
+                  >
+                    v3
+                  </span>
+                )}
+                {adminOnly && (
+                  <span
+                    className="ml-auto text-xs px-1.5 py-0.5 rounded"
+                    style={{
+                      background: "oklch(0.52 0.13 185 / 0.18)",
+                      color: "oklch(0.60 0.12 185)",
+                    }}
+                  >
+                    Admin
+                  </span>
+                )}
+              </button>
+            );
+          },
+        )}
       </nav>
 
       <div className="px-3 pb-5">

@@ -1,26 +1,34 @@
 # Jagdish PMS
 
 ## Current State
-- Blog admin panel exists (BlogAdmin.tsx) but calls backend `getAllPosts()` which returns empty because 115+ posts are static frontend data in BlogPage.tsx `BLOG_POSTS` array
-- Settings.tsx has a "Become Admin" button (bootstrapFirstAdmin) but user reports it is not visible
-- Admin rights needed to both see posts and edit/publish them
+The app has a version switcher with Classic and Advanced versions. The sidebar shows different nav items based on version. There is no broker/AMC/distributor-wise data entry feature yet.
 
 ## Requested Changes (Diff)
 
 ### Add
-- Auto-seed logic in BlogAdmin.tsx: when admin logs in and backend has 0 posts, automatically import all static BLOG_POSTS from BlogPage into the backend via createPost calls
-- Loading/progress indicator during seeding
+- New version "Elite" (v3) added to VERSIONS array in VersionContext.tsx
+- New page: `DistributorEntry.tsx` — available only in Elite version
+- The page has 4 tabs: **Broker**, **AMC**, **National Distributor**, **Sum**
+- In each of the first 3 tabs, users can add rows: name (e.g. Zerodha, SBI MF, NJ Wealth) + invested amount (INR)
+- The **Sum** tab shows a combined total from all three categories (Broker total, AMC total, Distributor total, Grand Total)
+- Data is stored in React state (no backend needed — this is a local entry form)
+- Sidebar shows "Distributor Entry" nav item only when version is "elite"
+- App.tsx routes to new page
 
 ### Modify
-- Settings.tsx: Make the "Become Admin" / "Claim Admin Access" section always visible and prominent when user is logged in and not yet admin -- remove any conditions that might hide it
-- BlogAdmin.tsx: After seeding completes, refresh the posts list so all 115+ posts appear
-- BlogPage.tsx: After seeding, use backend posts (getPublishedPosts) as the source of truth instead of static BLOG_POSTS array, so edits made in admin are reflected on the blog page
+- `VersionContext.tsx`: add Elite version entry (id: "elite", label: "Elite", badge: "v3")
+- `Sidebar.tsx`: add `distributor-entry` nav item with `eliteOnly` flag
+- `App.tsx`: add `distributor-entry` page to pageComponents map
+- `Sidebar.tsx`: filter logic to show eliteOnly items when selectedVersion === "elite"
 
 ### Remove
 - Nothing removed
 
 ## Implementation Plan
-1. In Settings.tsx: ensure the Claim Admin / Become Admin section renders whenever `isAdmin === false` and user is authenticated -- no extra conditions
-2. Export BLOG_POSTS array from BlogPage.tsx (or create a shared blogData.ts file) so BlogAdmin.tsx can import it
-3. In BlogAdmin.tsx: after loading posts, if `allPosts.length === 0` and user is admin, run seedPosts() which iterates BLOG_POSTS and calls createPost for each, then refreshes
-4. In BlogPage.tsx: prefer backend published posts over static array. If backend returns posts, show those. If backend returns 0 (pre-seeding), fall back to static BLOG_POSTS
+1. Update VersionContext to add Elite version
+2. Create `src/frontend/src/pages/DistributorEntry.tsx` with 4 tabs (Broker, AMC, National Distributor, Sum)
+   - Each data tab: table with Name + Amount columns, Add Row button, Delete row button
+   - Pre-populate with common names (Zerodha, Groww, HDFC Securities for Broker; SBI MF, HDFC MF, ICICI Prudential for AMC; NJ Wealth, Prudent for Distributor)
+   - Sum tab: shows subtotal per category and grand total
+3. Update Sidebar to include distributor-entry item (eliteOnly)
+4. Update App.tsx to render DistributorEntry page

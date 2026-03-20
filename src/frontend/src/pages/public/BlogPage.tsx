@@ -40,6 +40,7 @@ const CATEGORIES = [
   "Excel Users",
   "Google Sheets Users",
   "Platform Guide",
+  "Version Guide",
 ];
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -61,6 +62,8 @@ const CATEGORY_COLORS: Record<string, string> = {
   "Consumer Education": "oklch(0.50 0.15 100)",
   "Excel Users": "oklch(0.48 0.16 200)",
   "Google Sheets Users": "oklch(0.48 0.14 130)",
+  "Version Guide": "oklch(0.50 0.18 45)",
+  "Platform Guide": "oklch(0.50 0.14 290)",
 };
 
 function PostCard({
