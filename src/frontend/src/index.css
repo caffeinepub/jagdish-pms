@@ -1,0 +1,87 @@
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;600;700;800&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --radius: 0.5rem;
+    --background: 0.97 0.004 220;
+    --foreground: 0.15 0.02 255;
+    --card: 1 0 0;
+    --card-foreground: 0.15 0.02 255;
+    --popover: 1 0 0;
+    --popover-foreground: 0.15 0.02 255;
+    --primary: 0.28 0.085 240;
+    --primary-foreground: 0.98 0 0;
+    --secondary: 0.93 0.01 220;
+    --secondary-foreground: 0.25 0.05 240;
+    --muted: 0.94 0.008 220;
+    --muted-foreground: 0.5 0.018 240;
+    --accent: 0.52 0.13 185;
+    --accent-foreground: 0.98 0 0;
+    --destructive: 0.52 0.22 25;
+    --destructive-foreground: 1 0 0;
+    --border: 0.88 0.01 220;
+    --input: 0.88 0.01 220;
+    --ring: 0.52 0.13 185;
+    --success: 0.52 0.16 145;
+    --success-foreground: 1 0 0;
+    --chart-1: 0.28 0.085 240;
+    --chart-2: 0.52 0.13 185;
+    --chart-3: 0.6 0.18 45;
+    --chart-4: 0.55 0.17 310;
+    --chart-5: 0.52 0.16 145;
+    --sidebar: 0.18 0.065 240;
+    --sidebar-foreground: 0.95 0.005 240;
+    --sidebar-primary: 0.52 0.13 185;
+    --sidebar-primary-foreground: 1 0 0;
+    --sidebar-accent: 0.26 0.075 240;
+    --sidebar-accent-foreground: 0.95 0.005 240;
+    --sidebar-border: 0.25 0.06 240;
+    --sidebar-ring: 0.52 0.13 185;
+  }
+
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: "Plus Jakarta Sans", sans-serif;
+  }
+}
+
+.font-display {
+  font-family: "Playfair Display", serif;
+}
+
+.gain-text {
+  color: oklch(0.52 0.16 145);
+}
+.loss-text {
+  color: oklch(0.52 0.22 25);
+}
+.sidebar-gradient {
+  background: linear-gradient(
+    180deg,
+    oklch(0.18 0.065 240) 0%,
+    oklch(0.22 0.07 240) 100%
+  );
+}
+.website-nav {
+  background: oklch(0.2 0.075 240);
+}
+.hero-gradient {
+  background: linear-gradient(
+    135deg,
+    oklch(0.2 0.075 240) 0%,
+    oklch(0.28 0.085 240) 50%,
+    oklch(0.32 0.1 220) 100%
+  );
+}
+.teal-badge {
+  background: oklch(0.52 0.13 185 / 0.12);
+  color: oklch(0.35 0.1 185);
+  border: 1px solid oklch(0.52 0.13 185 / 0.3);
+}
