@@ -159,6 +159,25 @@ actor {
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
 
+  // One-time bootstrap: first logged-in user to call this becomes admin.
+  // Once an admin is assigned, this function does nothing.
+  stable var firstAdminBootstrapped : Bool = false;
+
+  public shared ({ caller }) func bootstrapFirstAdmin() : async Bool {
+    if (caller.isAnonymous()) {
+      return false;
+    };
+    if (firstAdminBootstrapped) {
+      // Already bootstrapped -- return whether caller is admin
+      return AccessControl.isAdmin(accessControlState, caller);
+    };
+    // No admin yet -- make the caller the admin
+    firstAdminBootstrapped := true;
+    accessControlState.userRoles.add(caller, #admin);
+    accessControlState.adminAssigned := true;
+    true;
+  };
+
   // User Profile Management
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {

@@ -207,6 +207,7 @@ export interface backendInterface {
     getPublishedPosts(): Promise<Array<BlogPost>>;
     getTransactions(): Promise<Array<Transaction>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
+    bootstrapFirstAdmin(): Promise<boolean>;
     isCallerAdmin(): Promise<boolean>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     updateNav(fundId: string, newNav: bigint): Promise<void>;
@@ -465,6 +466,20 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.getUserProfile(arg0);
             return from_candid_opt_n21(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async bootstrapFirstAdmin(): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.bootstrapFirstAdmin();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.bootstrapFirstAdmin();
+            return result;
         }
     }
     async isCallerAdmin(): Promise<boolean> {

@@ -110,6 +110,7 @@ export interface backendInterface {
     addFund(id: string, name: string, category: FundCategory, initialNav: bigint): Promise<void>;
     addTransaction(fundId: string, transactionType: TransactionType, units: bigint, navPerUnit: bigint, amount: bigint): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    bootstrapFirstAdmin(): Promise<boolean>;
     createPost(input: CreateBlogPostInput): Promise<string>;
     deletePost(postId: string): Promise<void>;
     getAllFunds(): Promise<Array<Fund>>;

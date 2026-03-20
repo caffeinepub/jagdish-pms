@@ -121,6 +121,7 @@ export interface _SERVICE {
   'getPublishedPosts' : ActorMethod<[], Array<BlogPost>>,
   'getTransactions' : ActorMethod<[], Array<Transaction>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
+  'bootstrapFirstAdmin' : ActorMethod<[], boolean>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'updateNav' : ActorMethod<[string, bigint], undefined>,

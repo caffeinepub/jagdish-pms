@@ -48,8 +48,9 @@ import {
   Trash2,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { BLOG_POSTS } from "../data/blogPosts";
 
 const BLOG_CATEGORIES = [
   "Vision",
@@ -359,7 +360,7 @@ function PostForm({
 }
 
 export default function BlogAdmin() {
-  const { data: posts = [], isLoading } = useGetAllPosts();
+  const { data: posts = [], isLoading, isFetched } = useGetAllPosts();
   const createPost = useCreatePost();
   const updatePost = useUpdatePost();
   const deletePost = useDeletePost();
@@ -368,6 +369,37 @@ export default function BlogAdmin() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<BlogPost | null>(null);
+  const [seedProgress, setSeedProgress] = useState(0);
+  const [isSeeding, setIsSeeding] = useState(false);
+  const seededRef = useRef(false);
+
+  useEffect(() => {
+    if (!isFetched || seededRef.current || posts.length > 0) return;
+    seededRef.current = true;
+    setIsSeeding(true);
+    const seed = async () => {
+      let count = 0;
+      for (const post of BLOG_POSTS) {
+        try {
+          await createPost.mutateAsync({
+            title: post.title,
+            summary: post.summary,
+            category: post.category,
+            author: post.author,
+            readTime: post.readTime,
+            status: PostStatus.published,
+            content: post.content,
+          });
+        } catch {
+          // ignore individual failures
+        }
+        count++;
+        setSeedProgress(count);
+      }
+      setIsSeeding(false);
+    };
+    seed();
+  }, [isFetched, posts.length, createPost.mutateAsync]);
 
   const filteredPosts = posts.filter((p) => {
     if (statusFilter === "all") return true;
@@ -549,7 +581,35 @@ export default function BlogAdmin() {
         className="rounded-xl border border-border overflow-hidden"
         style={{ background: "oklch(0.99 0.004 220)" }}
       >
-        {isLoading ? (
+        {isSeeding ? (
+          <div
+            className="flex flex-col items-center justify-center py-16 text-center gap-3"
+            data-ocid="blog_admin.loading_state"
+          >
+            <Loader2
+              className="w-6 h-6 animate-spin"
+              style={{ color: "oklch(0.35 0.10 240)" }}
+            />
+            <p
+              className="text-sm font-semibold"
+              style={{ color: "oklch(0.35 0.10 240)" }}
+            >
+              Importing blog posts...
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {seedProgress} / {BLOG_POSTS.length} posts imported
+            </p>
+            <div className="w-64 bg-gray-100 rounded-full h-2 overflow-hidden">
+              <div
+                className="h-2 rounded-full transition-all duration-300"
+                style={{
+                  width: `${Math.round((seedProgress / BLOG_POSTS.length) * 100)}%`,
+                  background: "oklch(0.35 0.10 240)",
+                }}
+              />
+            </div>
+          </div>
+        ) : isLoading ? (
           <div
             className="flex items-center justify-center py-16 text-muted-foreground text-sm gap-2"
             data-ocid="blog_admin.loading_state"
