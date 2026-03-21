@@ -41,7 +41,9 @@ function formatPaise(val: bigint): string {
 }
 
 function formatDate(ns: bigint): string {
-  return new Date(Number(ns) / 1_000_000).toLocaleDateString("en-IN");
+  return new Date(Number(ns) / 1_000_000).toLocaleDateString("en-IN", {
+    timeZone: "Asia/Kolkata",
+  });
 }
 
 function formatUnits(val: bigint): string {

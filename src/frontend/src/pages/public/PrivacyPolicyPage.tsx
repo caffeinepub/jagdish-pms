@@ -21,6 +21,7 @@ export default function PrivacyPolicyPage() {
           >
             Last updated:{" "}
             {new Date().toLocaleDateString("en-IN", {
+              timeZone: "Asia/Kolkata",
               year: "numeric",
               month: "long",
               day: "numeric",

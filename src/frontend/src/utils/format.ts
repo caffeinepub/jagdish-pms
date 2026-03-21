@@ -31,6 +31,7 @@ export function formatUnits(units: bigint): string {
 export function formatDate(nanos: bigint): string {
   const ms = Number(nanos) / 1_000_000;
   return new Date(ms).toLocaleDateString("en-IN", {
+    timeZone: "Asia/Kolkata",
     day: "2-digit",
     month: "short",
     year: "numeric",

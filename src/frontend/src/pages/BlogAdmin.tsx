@@ -91,7 +91,7 @@ const FALLBACK_BLOG_CATEGORIES = [
   "Version Guide",
 ];
 
-type StatusFilter = "all" | "published" | "draft" | "private";
+type StatusFilter = "all" | "published" | "scheduled" | "draft" | "private";
 
 function statusLabel(status: PostStatus): string {
   if (status === PostStatus.published) return "Published";
@@ -116,6 +116,7 @@ function isScheduledInFuture(scheduledAt?: bigint): boolean {
 
 function formatScheduledDate(ns: bigint): string {
   return nsToDate(ns).toLocaleDateString("en-IN", {
+    timeZone: "Asia/Kolkata",
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -1130,7 +1131,14 @@ export default function BlogAdmin() {
 
   const filteredPosts = blogPosts.filter((p) => {
     if (statusFilter === "all") return true;
-    if (statusFilter === "published") return p.status === PostStatus.published;
+    if (statusFilter === "published")
+      return (
+        p.status === PostStatus.published && !isScheduledInFuture(p.scheduledAt)
+      );
+    if (statusFilter === "scheduled")
+      return (
+        p.status === PostStatus.published && isScheduledInFuture(p.scheduledAt)
+      );
     if (statusFilter === "draft") return p.status === PostStatus.draft;
     if (statusFilter === "private")
       return p.status === PostStatus.privateVisibility;
@@ -1139,8 +1147,15 @@ export default function BlogAdmin() {
 
   const counts = {
     all: blogPosts.length,
-    published: blogPosts.filter((p) => p.status === PostStatus.published)
-      .length,
+    published: blogPosts.filter(
+      (p) =>
+        p.status === PostStatus.published &&
+        !isScheduledInFuture(p.scheduledAt),
+    ).length,
+    scheduled: blogPosts.filter(
+      (p) =>
+        p.status === PostStatus.published && isScheduledInFuture(p.scheduledAt),
+    ).length,
     draft: blogPosts.filter((p) => p.status === PostStatus.draft).length,
     private: blogPosts.filter((p) => p.status === PostStatus.privateVisibility)
       .length,
@@ -1351,6 +1366,12 @@ export default function BlogAdmin() {
                     ({counts.published})
                   </span>
                 </TabsTrigger>
+                <TabsTrigger value="scheduled" className="text-xs px-4">
+                  Scheduled{" "}
+                  <span className="ml-1.5 text-muted-foreground">
+                    ({counts.scheduled})
+                  </span>
+                </TabsTrigger>
                 <TabsTrigger value="draft" className="text-xs px-4">
                   Drafts{" "}
                   <span className="ml-1.5 text-muted-foreground">
@@ -1425,7 +1446,9 @@ export default function BlogAdmin() {
                   <p className="text-xs text-muted-foreground mt-1">
                     {statusFilter === "all"
                       ? "Create your first post using the New Post button."
-                      : `No ${statusFilter} posts yet.`}
+                      : statusFilter === "scheduled"
+                        ? "No posts are scheduled for future publishing."
+                        : `No ${statusFilter} posts yet.`}
                   </p>
                 </div>
               ) : (
@@ -1447,8 +1470,12 @@ export default function BlogAdmin() {
                         <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                           Status
                         </th>
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden xl:table-cell">
-                          Schedule
+                        <th
+                          className={`text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide ${statusFilter === "scheduled" ? "" : "hidden xl:table-cell"}`}
+                        >
+                          {statusFilter === "scheduled"
+                            ? "Publishes On"
+                            : "Schedule"}
                         </th>
                         <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden lg:table-cell">
                           Author
@@ -1500,7 +1527,9 @@ export default function BlogAdmin() {
                                 scheduledAt={post.scheduledAt}
                               />
                             </td>
-                            <td className="px-4 py-3 hidden xl:table-cell">
+                            <td
+                              className={`px-4 py-3 ${statusFilter === "scheduled" ? "" : "hidden xl:table-cell"}`}
+                            >
                               <ScheduleDateCell post={post} />
                             </td>
                             <td className="px-4 py-3 hidden lg:table-cell">

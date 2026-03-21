@@ -358,6 +358,7 @@ function toLocalPost(bp: {
   const date =
     ms > 0
       ? new Date(ms).toLocaleDateString("en-IN", {
+          timeZone: "Asia/Kolkata",
           year: "numeric",
           month: "long",
           day: "numeric",

@@ -57,6 +57,7 @@ export default function Dashboard() {
 
   const now = new Date();
   const dateStr = now.toLocaleDateString("en-IN", {
+    timeZone: "Asia/Kolkata",
     weekday: "long",
     day: "numeric",
     month: "long",
