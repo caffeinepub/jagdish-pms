@@ -89,11 +89,13 @@ actor {
     summary : Text;
     content : [Text];
     author : Text;
-    category : Text;
+    categories : [Text];
+    tags : [Text];
     readTime : Text;
     status : PostStatus;
     createdAt : Time.Time;
     updatedAt : Time.Time;
+    scheduledAt : ?Time.Time;
   };
 
   public type PostStatus = { #published; #draft; #privateVisibility };
@@ -103,9 +105,11 @@ actor {
     summary : Text;
     content : [Text];
     author : Text;
-    category : Text;
+    categories : [Text];
+    tags : [Text];
     readTime : Text;
     status : PostStatus;
+    scheduledAt : ?Time.Time;
   };
 
   public type UpdateBlogPostInput = {
@@ -114,9 +118,11 @@ actor {
     summary : Text;
     content : [Text];
     author : Text;
-    category : Text;
+    categories : [Text];
+    tags : [Text];
     readTime : Text;
     status : PostStatus;
+    scheduledAt : ?Time.Time;
   };
 
   // Admin export types
@@ -188,6 +194,9 @@ actor {
 
   var nextPostId = 1;
 
+  let tags = List.fromArray(["ELSS", "SIP", "Capital Gains", "NAV", "Mutual Fund", "Tax Saving", "LTCG", "STCG", "Dividend", "Redemption", "Switch", "Lump Sum", "Portfolio", "Rebalancing", "Goal Planning", "Risk Profile", "CAS", "CAMS", "KFintech", "NSDL", "AMC", "Broker", "ITR", "Bank Reconciliation", "Document Wallet", "Robo Advisory", "Version Guide", "Android App", "Affiliate"]);
+  let categories = List.fromArray(["Vision", "Technology", "Architecture", "Features", "Finance", "Design", "Roadmap", "Infrastructure", "Developer Guide", "History", "Growth", "Troubleshooting", "User Guide", "Release Notes", "FAQ", "Consumer Education", "Excel Users", "Google Sheets Users", "Platform Guide", "Version Guide"]);
+
   // Authorization
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
@@ -252,8 +261,8 @@ actor {
   };
 
   public shared ({ caller }) func updateNav(fundId : Text, newNav : Nat) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can update NAV");
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can update NAV");
     };
     switch (funds.get(fundId)) {
       case (null) { Runtime.trap("Fund not found") };
@@ -387,7 +396,7 @@ actor {
           case (?fund) {
             let amountInvested = holding.avgCostNav * holding.units;
             let currentValue = fund.currentNav * holding.units;
-            let gainLoss = currentValue - amountInvested;
+            let gainLoss = currentValue.toInt() - amountInvested.toInt();
             {
               fundId = holding.fundId;
               units = holding.units;
@@ -408,7 +417,7 @@ actor {
       0,
       func(acc, hs) { hs.currentValue + acc },
     );
-    let gainLoss = currentValue - investedAmount;
+    let gainLoss = currentValue.toInt() - investedAmount.toInt();
 
     {
       investedAmount;
@@ -623,7 +632,17 @@ actor {
   // Get all published posts (public endpoint)
   public query ({ caller }) func getPublishedPosts() : async [BlogPost] {
     blogPosts.values().toArray().filter(
-      func(post) { switch (post.status) { case (#published) { true }; case (_) { false } } }
+      func(post) {
+        switch (post.status) {
+          case (#published) {
+            switch (post.scheduledAt) {
+              case (null) { true }; // No scheduled time = visible
+              case (?datetime) { datetime <= Time.now() }; // Only show scheduled posts when scheduledAt is in the past
+            };
+          };
+          case (_) { false };
+        };
+      }
     ).sort(BlogPostSort.compareByCreatedAt);
   };
 
@@ -640,9 +659,23 @@ actor {
     switch (blogPosts.get(postId)) {
       case (null) { null };
       case (?post) {
-        if (post.status == #published or AccessControl.hasPermission(accessControlState, caller, #admin)) {
+        // Non-admin callers can only see published posts that meet the schedule criteria
+        if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
+          switch (post.status) {
+            case (#published) {
+              switch (post.scheduledAt) {
+                case (null) { ?post }; // No scheduled time = visible
+                case (?datetime) {
+                  if (datetime <= Time.now()) { ?post } else { null };
+                };
+              };
+            };
+            case (_) { null };
+          };
+        } else {
+          // Admins can see all posts regardless of status or schedule
           ?post;
-        } else { null };
+        };
       };
     };
   };
@@ -662,11 +695,13 @@ actor {
       summary = input.summary;
       content = input.content;
       author = input.author;
-      category = input.category;
+      categories = input.categories;
+      tags = input.tags;
       readTime = input.readTime;
       status = input.status;
       createdAt = Time.now();
       updatedAt = Time.now();
+      scheduledAt = input.scheduledAt;
     };
 
     blogPosts.add(postId, newPost);
@@ -688,14 +723,57 @@ actor {
           summary = input.summary;
           content = input.content;
           author = input.author;
-          category = input.category;
+          categories = input.categories;
+          tags = input.tags;
           readTime = input.readTime;
           status = input.status;
           createdAt = existing.createdAt;
           updatedAt = Time.now();
+          scheduledAt = input.scheduledAt;
         };
         blogPosts.add(input.id, updatedPost);
       };
+    };
+  };
+
+  // Update only the scheduledAt field of a post (admin only)
+  public shared ({ caller }) func updatePostSchedule(postId : Text, scheduledAt : ?Time.Time) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can update post schedules");
+    };
+
+    switch (blogPosts.get(postId)) {
+      case (null) { Runtime.trap("Post not found") };
+      case (?existing) {
+        let updatedPost : BlogPost = {
+          existing with
+          scheduledAt;
+          updatedAt = Time.now();
+        };
+        blogPosts.add(postId, updatedPost);
+      };
+    };
+  };
+
+  // Reschedule all posts (admin only)
+  public shared ({ caller }) func adminRescheduleAllPosts() : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can reschedule posts");
+    };
+
+    let allPosts = blogPosts.values().toArray().filter(func(p) { switch (p.status) { case (#published) { true }; case (_) { false } } }).sort(BlogPostSort.compareByCreatedAt);
+    let todayNanos = Time.now();
+    let twoDaysNanos = 2 * 24 * 60 * 60 * 1_000_000_000;
+
+    for (i in Nat.range(0, allPosts.size())) {
+      let post = allPosts[i];
+      let newScheduledAt : Time.Time = todayNanos + (i * twoDaysNanos);
+      let updatedPost : BlogPost = {
+        post with
+        scheduledAt = ?newScheduledAt;
+        updatedAt = Time.now();
+      };
+      blogPosts.add(post.id, updatedPost);
     };
   };
 
@@ -710,6 +788,118 @@ actor {
       case (?_) {
         blogPosts.remove(postId);
       };
+    };
+  };
+
+  // BLOG TAGS / CATEGORIES
+
+  // Retrieve all tags (non-admin as well)
+  public query ({ caller }) func getAllTags() : async [Text] {
+    tags.toArray();
+  };
+
+  // Retrieve all categories (non-admin as well)
+  public query ({ caller }) func getAllCategories() : async [Text] {
+    categories.toArray();
+  };
+
+  // Add a tag (admin only)
+  public shared ({ caller }) func addTag(tag : Text) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can add tags");
+    };
+    let trimmedTag = trimTextInternal(capitalizeFirstCharInternal(tag));
+    if (trimmedTag == "") {
+      Runtime.trap("Empty tag is not allowed");
+    };
+
+    // Check if tag already exists (case-insensitive)
+    let exists = tags.toArray().find(func(t) { t.toLower() == trimmedTag.toLower() }) != null;
+    if (exists) {
+      Runtime.trap("Tag already exists");
+    };
+
+    tags.add(trimmedTag);
+  };
+
+  // Delete a tag (admin only)
+  public shared ({ caller }) func deleteTag(tag : Text) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can delete tags");
+    };
+
+    // Remove using filter based on exact match
+    let filteredTags = tags.toArray().filter(func(t) { t != tag });
+    tags.clear();
+    let iter = filteredTags.values();
+    loop {
+      switch (iter.next()) {
+        case (null) { return };
+        case (?t) { tags.add(t) };
+      };
+    };
+  };
+
+  // Add a category (admin only)
+  public shared ({ caller }) func addCategory(category : Text) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can add categories");
+    };
+    let trimmedCategory = trimTextInternal(capitalizeFirstCharInternal(category));
+    if (trimmedCategory == "") {
+      Runtime.trap("Empty category is not allowed");
+    };
+
+    // Check if category already exists (case-insensitive)
+    let exists = categories.toArray().find(func(c) { c.toLower() == trimmedCategory.toLower() }) != null;
+    if (exists) {
+      Runtime.trap("Category already exists");
+    };
+
+    categories.add(trimmedCategory);
+  };
+
+  // Delete a category (admin only)
+  public shared ({ caller }) func deleteCategory(category : Text) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can delete categories");
+    };
+
+    // Remove using filter based on exact match
+    let filteredCategories = categories.toArray().filter(func(c) { c != category });
+    categories.clear();
+    let iter = filteredCategories.values();
+    loop {
+      switch (iter.next()) {
+        case (null) { return };
+        case (?c) { categories.add(c) };
+      };
+    };
+  };
+
+  // Helper functions for string manipulation
+  private func trimTextInternal(text : Text) : Text {
+    text.trim(#predicate(func(c) { c == ' ' }));
+  };
+
+  private func capitalizeFirstCharInternal(text : Text) : Text {
+    if (text == "") { return text };
+    let chars = text.toArray();
+    if (chars.size() == 0) { return text };
+    let firstChar = chars[0];
+    let rest = chars.sliceToArray(1, chars.size());
+    let firstUpper = capitalizeInternal(firstChar);
+    firstUpper # Text.fromArray(rest);
+  };
+
+  private func capitalizeInternal(c : Char) : Text {
+    let lower : [Char] = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'];
+    let upper : [Char] = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
+    let cText = c.toText();
+    let lowerIndex = lower.findIndex(func(l) { l.toText() == cText });
+    switch (lowerIndex) {
+      case (null) { c.toText() }; // not a lowercase letter
+      case (?i) { upper[i].toText() };
     };
   };
 };

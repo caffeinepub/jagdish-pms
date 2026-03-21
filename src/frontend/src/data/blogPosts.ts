@@ -4,7 +4,8 @@ export interface StaticBlogPost {
   date: string;
   author: string;
   readTime: string;
-  category: string;
+  categories: string[];
+  tags?: string[];
   summary: string;
   content: string[];
 }
@@ -16,7 +17,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "January 5, 2026",
     author: "Jagdish",
     readTime: "5 min read",
-    category: "Vision",
+    categories: ["Vision"],
     summary:
       "Every Indian mutual fund investor eventually outgrows their spreadsheet. Here's why we decided to build a dedicated portfolio management tool.",
     content: [
@@ -32,7 +33,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "January 8, 2026",
     author: "Jagdish",
     readTime: "6 min read",
-    category: "Vision",
+    categories: ["Vision"],
     summary:
       "Our long-term vision is to become the most trusted self-managed portfolio tracker for retail mutual fund investors in India.",
     content: [
@@ -49,7 +50,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "January 12, 2026",
     author: "Dev Team",
     readTime: "7 min read",
-    category: "Technology",
+    categories: ["Technology"],
     summary:
       "A deep dive into the tech stack powering Jagdish PMS — from Motoko smart contracts to React frontend.",
     content: [
@@ -66,7 +67,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "January 16, 2026",
     author: "Dev Team",
     readTime: "8 min read",
-    category: "Architecture",
+    categories: ["Architecture"],
     summary:
       "Understanding the core data entities — UserProfile, Fund, Transaction — and how they relate to each other.",
     content: [
@@ -83,7 +84,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "January 20, 2026",
     author: "Dev Team",
     readTime: "6 min read",
-    category: "Features",
+    categories: ["Features"],
     summary:
       "How the Transactions module works — adding buys, recording redemptions, and the validations in place.",
     content: [
@@ -100,7 +101,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "January 24, 2026",
     author: "Dev Team",
     readTime: "5 min read",
-    category: "Features",
+    categories: ["Features"],
     summary:
       "How users keep NAVs current — the manual update flow, and the roadmap for automation.",
     content: [
@@ -117,7 +118,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "January 28, 2026",
     author: "Dev Team",
     readTime: "5 min read",
-    category: "Features",
+    categories: ["Features"],
     summary:
       "The Holdings page gives users a complete snapshot of their portfolio — current value, invested amount, and unrealized P&L.",
     content: [
@@ -134,7 +135,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "February 1, 2026",
     author: "Dev Team",
     readTime: "9 min read",
-    category: "Features",
+    categories: ["Features"],
     summary:
       "The most complex feature in the app — computing STCG and LTCG for Indian mutual fund investors accurately.",
     content: [
@@ -151,7 +152,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "February 5, 2026",
     author: "Dev Team",
     readTime: "6 min read",
-    category: "Architecture",
+    categories: ["Architecture"],
     summary:
       "Jagdish PMS uses Internet Identity for authentication — no passwords, cryptographic security by default.",
     content: [
@@ -168,7 +169,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "February 9, 2026",
     author: "Dev Team",
     readTime: "5 min read",
-    category: "Architecture",
+    categories: ["Architecture"],
     summary:
       "How the public website and the authenticated app coexist in a single-page React application.",
     content: [
@@ -185,7 +186,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "February 13, 2026",
     author: "Dev Team",
     readTime: "5 min read",
-    category: "Design",
+    categories: ["Design"],
     summary:
       "The visual design language of Jagdish PMS — the navy/teal palette, OKLCH color system, and typography choices.",
     content: [
@@ -202,7 +203,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "February 16, 2026",
     author: "Dev Team",
     readTime: "4 min read",
-    category: "Architecture",
+    categories: ["Architecture"],
     summary:
       "New users see real fund names from day one. Here's how the seed data mechanism works.",
     content: [
@@ -219,7 +220,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "February 19, 2026",
     author: "Dev Team",
     readTime: "4 min read",
-    category: "Features",
+    categories: ["Features"],
     summary:
       "First-time users go through a profile setup before accessing the app. Here's how that flow works.",
     content: [
@@ -235,7 +236,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "February 22, 2026",
     author: "Dev Team",
     readTime: "7 min read",
-    category: "Developer Guide",
+    categories: ["Developer Guide"],
     summary:
       "A walkthrough of the codebase structure — where to find what, and how each part fits together.",
     content: [
@@ -253,7 +254,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "February 25, 2026",
     author: "Jagdish",
     readTime: "6 min read",
-    category: "History",
+    categories: ["History"],
     summary:
       "A chronological account of how the product was built — from the initial failed build to the live v2.",
     content: [
@@ -270,7 +271,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "February 28, 2026",
     author: "Jagdish",
     readTime: "8 min read",
-    category: "Finance",
+    categories: ["Finance"],
     summary:
       "The tax rules that drive the capital gains module — STCG, LTCG, holding periods, and FIFO explained simply.",
     content: [
@@ -288,7 +289,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 2, 2026",
     author: "Jagdish",
     readTime: "7 min read",
-    category: "Roadmap",
+    categories: ["Roadmap"],
     summary:
       "The feature backlog — from automated NAV updates to SIP calculators, multi-user support, and mobile experience.",
     content: [
@@ -305,7 +306,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 5, 2026",
     author: "Dev Team",
     readTime: "5 min read",
-    category: "Infrastructure",
+    categories: ["Infrastructure"],
     summary:
       "The app runs as an ICP canister. No servers, no cloud bills, no DevOps. Here's what that means in practice.",
     content: [
@@ -322,7 +323,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 8, 2026",
     author: "Dev Team",
     readTime: "6 min read",
-    category: "Developer Guide",
+    categories: ["Developer Guide"],
     summary:
       "A practical guide for testing Jagdish PMS — manual test cases, critical paths, and what to verify after changes.",
     content: [
@@ -340,7 +341,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 10, 2026",
     author: "Jagdish",
     readTime: "10 min read",
-    category: "Developer Guide",
+    categories: ["Developer Guide"],
     summary:
       "The complete onboarding guide for anyone taking charge of the Jagdish PMS codebase. Start here.",
     content: [
@@ -360,7 +361,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 12, 2026",
     author: "Jagdish",
     readTime: "5 min read",
-    category: "Growth",
+    categories: ["Growth"],
     summary:
       "How we plan to make Jagdish PMS discoverable on search engines for Indian mutual fund investors.",
     content: [
@@ -376,7 +377,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 14, 2026",
     author: "Dev Team",
     readTime: "5 min read",
-    category: "Architecture",
+    categories: ["Architecture"],
     summary:
       "Understanding the security guarantees of an ICP-based app and what that means for user data privacy.",
     content: [
@@ -393,7 +394,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 16, 2026",
     author: "Jagdish",
     readTime: "6 min read",
-    category: "Vision",
+    categories: ["Vision"],
     summary:
       "A look at the ambitious but achievable 3-year roadmap — from solo tool to India's go-to retail PMS platform.",
     content: [
@@ -410,7 +411,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 18, 2026",
     author: "Dev Team",
     readTime: "7 min read",
-    category: "Troubleshooting",
+    categories: ["Troubleshooting"],
     summary:
       "A practical reference for diagnosing and resolving the most common issues encountered while developing or using Jagdish PMS.",
     content: [
@@ -429,7 +430,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 19, 2026",
     author: "Dev Team",
     readTime: "8 min read",
-    category: "Developer Guide",
+    categories: ["Developer Guide"],
     summary:
       "A complete step-by-step guide to cloning, running, and testing Jagdish PMS locally from scratch.",
     content: [
@@ -450,7 +451,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Dev Team",
     readTime: "6 min read",
-    category: "Developer Guide",
+    categories: ["Developer Guide"],
     summary:
       "How to export user data, migrate between environments, and restore a portfolio if needed.",
     content: [
@@ -467,7 +468,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 21, 2026",
     author: "Jagdish",
     readTime: "7 min read",
-    category: "Finance",
+    categories: ["Finance"],
     summary:
       "A plain-language glossary of mutual fund and Indian tax terms used throughout the Jagdish PMS codebase and documentation.",
     content: [
@@ -490,7 +491,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 22, 2026",
     author: "Jagdish",
     readTime: "8 min read",
-    category: "Features",
+    categories: ["Features"],
     summary:
       "A complete end-user guide to using Jagdish PMS — from first login to generating your capital gains report.",
     content: [
@@ -511,7 +512,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 23, 2026",
     author: "Jagdish",
     readTime: "5 min read",
-    category: "Developer Guide",
+    categories: ["Developer Guide"],
     summary:
       "A transparent list of current limitations in Jagdish PMS v1 — important context for users and developers alike.",
     content: [
@@ -532,7 +533,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 24, 2026",
     author: "Jagdish",
     readTime: "9 min read",
-    category: "Roadmap",
+    categories: ["Roadmap"],
     summary:
       "Detailed specs for planned features — enough context for a developer to pick up any item and start building.",
     content: [
@@ -551,7 +552,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "3 min read",
-    category: "User Guide",
+    categories: ["User Guide"],
     summary:
       "A step-by-step guide for new users: how to open Jagdish PMS, create your Internet Identity, and set up your profile in under 5 minutes.",
     content: [
@@ -568,7 +569,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "4 min read",
-    category: "User Guide",
+    categories: ["User Guide"],
     summary:
       "Learn how to add a mutual fund to your portfolio and record a buy transaction — the two most important first steps in using Jagdish PMS.",
     content: [
@@ -586,7 +587,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "3 min read",
-    category: "User Guide",
+    categories: ["User Guide"],
     summary:
       "NAV (Net Asset Value) is the price of one unit of a mutual fund. Keeping it up to date ensures your portfolio value is accurate. Here is how to update it.",
     content: [
@@ -604,7 +605,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "4 min read",
-    category: "User Guide",
+    categories: ["User Guide"],
     summary:
       "The Portfolio Summary (Dashboard) shows the current value of your investments, total gains, and fund-wise breakdown. Here is what each number means.",
     content: [
@@ -622,7 +623,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "5 min read",
-    category: "User Guide",
+    categories: ["User Guide"],
     summary:
       "The Capital Gains Report shows your taxable gains from selling mutual fund units. Learn how to generate it and understand each column — essential for ITR filing.",
     content: [
@@ -640,7 +641,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "4 min read",
-    category: "Release Notes",
+    categories: ["Release Notes"],
     summary:
       "Version 1.0 of Jagdish PMS is officially released. Here is everything that is included, known limitations, and what is planned next.",
     content: [
@@ -658,7 +659,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "5 min read",
-    category: "Release Notes",
+    categories: ["Release Notes"],
     summary:
       "Version 1.1 of Jagdish PMS introduces a complete User Guide section in the blog with 5 step-by-step how-to posts for end users, plus a new User Guide category filter.",
     content: [
@@ -678,7 +679,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "7 min read",
-    category: "FAQ",
+    categories: ["FAQ"],
     summary:
       "Quick answers to the 15 most common questions a new developer will have when taking over Jagdish PMS. Skip hours of digging and get productive fast.",
     content: [
@@ -707,7 +708,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "6 min read",
-    category: "Consumer Education",
+    categories: ["Consumer Education"],
     summary:
       "Millions of Indian investors still track their mutual funds in handwritten registers. This post explains exactly how that habit leads to missed gains, wrong tax calculations, and avoidable losses.",
     content: [
@@ -726,7 +727,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "5 min read",
-    category: "Consumer Education",
+    categories: ["Consumer Education"],
     summary:
       "A side-by-side comparison of maintaining a handwritten register versus using a free portfolio management tool -- covering accuracy, time, tax season, and peace of mind.",
     content: [
@@ -745,7 +746,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "7 min read",
-    category: "Consumer Education",
+    categories: ["Consumer Education"],
     summary:
       "A practical, step-by-step guide for investors who want to move from a handwritten mutual fund register to a digital portfolio management tool without losing any historical data.",
     content: [
@@ -766,7 +767,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "5 min read",
-    category: "Consumer Education",
+    categories: ["Consumer Education"],
     summary:
       "Every July, investors who track mutual funds manually face hours of painful calculations. This post walks through exactly what goes wrong and how to avoid it.",
     content: [
@@ -785,7 +786,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "5 min read",
-    category: "Consumer Education",
+    categories: ["Consumer Education"],
     summary:
       "These five mistakes are extremely common among investors who use physical registers. Each one can cost you real money at tax time or during redemption.",
     content: [
@@ -803,7 +804,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "4 min read",
-    category: "Consumer Education",
+    categories: ["Consumer Education"],
     summary:
       "NAV -- Net Asset Value -- is the most important number for every mutual fund investor. This post explains what it is, why it changes daily, and why a static register cannot keep up.",
     content: [
@@ -821,7 +822,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "6 min read",
-    category: "Consumer Education",
+    categories: ["Consumer Education"],
     summary:
       "FIFO is the mandatory method for calculating mutual fund capital gains in India. This post explains it in plain language and shows why it is nearly impossible to do accurately with a handwritten register.",
     content: [
@@ -840,7 +841,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "5 min read",
-    category: "Consumer Education",
+    categories: ["Consumer Education"],
     summary:
       "Systematic Investment Plans create a new transaction every month. After a few years, tracking SIPs in a physical register becomes unmanageable. Here is why and what to do instead.",
     content: [
@@ -859,7 +860,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "5 min read",
-    category: "Consumer Education",
+    categories: ["Consumer Education"],
     summary:
       "The Income Tax Department has specific requirements for how capital gains must be calculated and reported. This post checks whether a typical handwritten register actually meets those requirements.",
     content: [
@@ -879,7 +880,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "4 min read",
-    category: "Consumer Education",
+    categories: ["Consumer Education"],
     summary:
       "Going digital with your mutual fund records is easier than most investors expect. This guide explains exactly what to do in three simple steps.",
     content: [
@@ -898,7 +899,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "4 min read",
-    category: "Consumer Education",
+    categories: ["Consumer Education"],
     summary:
       "Most investors do not realize how many hours they spend maintaining manual records. This post calculates the real time cost of a physical mutual fund register.",
     content: [
@@ -918,7 +919,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "4 min read",
-    category: "Consumer Education",
+    categories: ["Consumer Education"],
     summary:
       "A physical register is vulnerable to loss, damage, or theft. This post explains what you lose if that happens -- and how to protect yourself.",
     content: [
@@ -936,7 +937,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "5 min read",
-    category: "Consumer Education",
+    categories: ["Consumer Education"],
     summary:
       "Many senior investors prefer physical registers because digital tools seem complicated. This post explains why modern portfolio management software is actually simpler than maintaining a register.",
     content: [
@@ -955,7 +956,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "4 min read",
-    category: "Consumer Education",
+    categories: ["Consumer Education"],
     summary:
       "Many investors maintain both a personal register and rely on CAS statements. This post clarifies which one is authoritative -- and why they sometimes differ.",
     content: [
@@ -974,7 +975,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "5 min read",
-    category: "Consumer Education",
+    categories: ["Consumer Education"],
     summary:
       "Regular portfolio review is essential for healthy investing. But if you track investments in a register, meaningful review is nearly impossible. Here is why.",
     content: [
@@ -993,7 +994,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "4 min read",
-    category: "Consumer Education",
+    categories: ["Consumer Education"],
     summary:
       "Passing on financial knowledge to the next generation is important. A digital portfolio tool is a far better teaching tool than a handwritten register.",
     content: [
@@ -1011,7 +1012,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "5 min read",
-    category: "Consumer Education",
+    categories: ["Consumer Education"],
     summary:
       "The difference between STCG and LTCG on mutual funds can be thousands of rupees in tax. This post explains how register-based tracking frequently leads to incorrect tax classification.",
     content: [
@@ -1030,7 +1031,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "4 min read",
-    category: "Consumer Education",
+    categories: ["Consumer Education"],
     summary:
       "Many families manage investments for multiple members -- spouse, children, parents. A single shared register quickly becomes unmanageable. Here is a better way.",
     content: [
@@ -1047,7 +1048,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "3 min read",
-    category: "Consumer Education",
+    categories: ["Consumer Education"],
     summary:
       "A quick yes/no checklist to help you decide if your physical register has outlived its usefulness -- and what to do next.",
     content: [
@@ -1069,7 +1070,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "4 min read",
-    category: "Consumer Education",
+    categories: ["Consumer Education"],
     summary:
       "A realistic account of what the transition from a physical register to a digital portfolio management tool looks like -- the effort, the payoff, and what changes.",
     content: [
@@ -1087,7 +1088,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "3 min read",
-    category: "Release Notes",
+    categories: ["Release Notes"],
     summary:
       "Version 1.2 adds 20 SEO-focused blog posts under the new Consumer Education category, targeting Indian mutual fund investors who currently track investments in physical registers at home.",
     content: [
@@ -1104,7 +1105,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "6 min read",
-    category: "Excel Users",
+    categories: ["Excel Users"],
     summary:
       "Excel was built for general-purpose number crunching, not for the specific demands of Indian mutual fund tracking -- and the gaps show up at the worst possible times.",
     content: [
@@ -1122,7 +1123,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "5 min read",
-    category: "Excel Users",
+    categories: ["Excel Users"],
     summary:
       "Most Excel-based mutual fund trackers contain at least one silent formula error that produces wrong results without any warning.",
     content: [
@@ -1139,7 +1140,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "7 min read",
-    category: "Excel Users",
+    categories: ["Excel Users"],
     summary:
       "FIFO capital gains calculation is required by Indian tax law and is straightforward in concept, but implementing it correctly in Excel is genuinely difficult.",
     content: [
@@ -1158,7 +1159,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "6 min read",
-    category: "Excel Users",
+    categories: ["Excel Users"],
     summary:
       "A direct comparison of Excel and dedicated portfolio management software across the dimensions that matter most to Indian mutual fund investors.",
     content: [
@@ -1176,7 +1177,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "5 min read",
-    category: "Excel Users",
+    categories: ["Excel Users"],
     summary:
       "Tax season is when Excel's limitations hurt the most -- and by then, correcting months of accumulated errors is a painful process.",
     content: [
@@ -1194,7 +1195,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "7 min read",
-    category: "Excel Users",
+    categories: ["Excel Users"],
     summary:
       "Moving your mutual fund transaction history from Excel to a dedicated portfolio tracker is simpler than it sounds and can usually be done in an afternoon.",
     content: [
@@ -1212,7 +1213,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "5 min read",
-    category: "Excel Users",
+    categories: ["Excel Users"],
     summary:
       "Excel handles the early months of SIP tracking reasonably well, but as the transaction count grows, the maintenance burden becomes disproportionate to the value.",
     content: [
@@ -1229,7 +1230,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "6 min read",
-    category: "Excel Users",
+    categories: ["Excel Users"],
     summary:
       "The XIRR function in Excel can give you an annualized return figure, but many investors unknowingly use it incorrectly and get misleading results.",
     content: [
@@ -1247,7 +1248,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "4 min read",
-    category: "Excel Users",
+    categories: ["Excel Users"],
     summary:
       "An Excel file that works perfectly on your current computer may produce errors or display incorrectly when opened on a different version or on a different operating system.",
     content: [
@@ -1264,7 +1265,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "5 min read",
-    category: "Excel Users",
+    categories: ["Excel Users"],
     summary:
       "Knowing the LTCG/STCG boundary date for each purchase lot is critical for tax optimization, and Excel rarely surfaces this information proactively.",
     content: [
@@ -1281,7 +1282,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "5 min read",
-    category: "Excel Users",
+    categories: ["Excel Users"],
     summary:
       "Excel works reasonably well for one or two funds, but managing a diversified portfolio of eight or ten funds quickly becomes unmanageable.",
     content: [
@@ -1298,7 +1299,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "4 min read",
-    category: "Excel Users",
+    categories: ["Excel Users"],
     summary:
       "Keeping NAV values current in an Excel tracker requires a monthly ritual that is tedious, error-prone, and completely avoidable with the right tools.",
     content: [
@@ -1315,7 +1316,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "5 min read",
-    category: "Excel Users",
+    categories: ["Excel Users"],
     summary:
       "Excel files are more fragile than they appear, and losing years of mutual fund transaction history to a technical mishap is a real and preventable risk.",
     content: [
@@ -1333,7 +1334,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "4 min read",
-    category: "Excel Users",
+    categories: ["Excel Users"],
     summary:
       "Sharing an Excel file -- even briefly, even accidentally -- can expose sensitive financial data to people who should not have it.",
     content: [
@@ -1350,7 +1351,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "6 min read",
-    category: "Excel Users",
+    categories: ["Excel Users"],
     summary:
       "Most investors with a well-maintained Excel tracker can migrate to a dedicated portfolio management tool in under an hour, following a straightforward process.",
     content: [
@@ -1369,7 +1370,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "5 min read",
-    category: "Excel Users",
+    categories: ["Excel Users"],
     summary:
       "Excel is a genuinely excellent tool for personal budgeting and expense tracking, but its flexibility becomes a liability when applied to tax-sensitive capital gains calculations.",
     content: [
@@ -1386,7 +1387,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "5 min read",
-    category: "Excel Users",
+    categories: ["Excel Users"],
     summary:
       "Five specific mistakes appear repeatedly in Excel-based mutual fund trackers -- knowing them helps you audit your own spreadsheet for errors.",
     content: [
@@ -1404,7 +1405,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "4 min read",
-    category: "Excel Users",
+    categories: ["Excel Users"],
     summary:
       "A monthly portfolio review that takes thirty minutes in Excel can take under five minutes in a dedicated portfolio management tool.",
     content: [
@@ -1421,7 +1422,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "5 min read",
-    category: "Excel Users",
+    categories: ["Excel Users"],
     summary:
       "Ready-made Excel templates for mutual fund tracking are better than building from scratch, but they still carry the fundamental limitations of Excel as a platform.",
     content: [
@@ -1439,7 +1440,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "5 min read",
-    category: "Excel Users",
+    categories: ["Excel Users"],
     summary:
       "A simple self-assessment to help you decide whether your current Excel system is still serving you well or whether it is time to move to dedicated portfolio management software.",
     content: [
@@ -1456,7 +1457,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "March 20, 2026",
     author: "Jagdish",
     readTime: "3 min read",
-    category: "Release Notes",
+    categories: ["Release Notes"],
     summary:
       "Version 1.3 adds 20 SEO-focused blog posts under the new Excel Users category, targeting Indian mutual fund investors who currently track their investments in Microsoft Excel.",
     content: [
@@ -1474,7 +1475,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "5 min read",
-    category: "Google Sheets Users",
+    categories: ["Google Sheets Users"],
     summary:
       "Google Sheets is a powerful spreadsheet but it was never designed to manage mutual fund portfolios. Here is why that gap matters.",
     content: [
@@ -1490,7 +1491,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "5 min read",
-    category: "Google Sheets Users",
+    categories: ["Google Sheets Users"],
     summary:
       "From accidental cell edits to formula drift, Google Sheets introduces risks that dedicated portfolio software eliminates.",
     content: [
@@ -1507,7 +1508,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "5 min read",
-    category: "Google Sheets Users",
+    categories: ["Google Sheets Users"],
     summary:
       "A side-by-side comparison of using Google Sheets versus dedicated PMS for mutual fund tracking in India.",
     content: [
@@ -1525,7 +1526,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "5 min read",
-    category: "Google Sheets Users",
+    categories: ["Google Sheets Users"],
     summary:
       "A practical step-by-step guide to moving your investment records from Google Sheets into a dedicated portfolio management tool.",
     content: [
@@ -1545,7 +1546,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "5 min read",
-    category: "Google Sheets Users",
+    categories: ["Google Sheets Users"],
     summary:
       "FIFO-based capital gains calculation is one of the hardest things to do correctly in a spreadsheet. Most DIY formulas have hidden errors.",
     content: [
@@ -1563,7 +1564,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "5 min read",
-    category: "Google Sheets Users",
+    categories: ["Google Sheets Users"],
     summary:
       "If any of these situations sound familiar, your portfolio has outgrown what a spreadsheet can safely handle.",
     content: [
@@ -1583,7 +1584,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "5 min read",
-    category: "Google Sheets Users",
+    categories: ["Google Sheets Users"],
     summary:
       "The most common tax mistakes Indian mutual fund investors make when relying on spreadsheet calculations for ITR filing.",
     content: [
@@ -1601,7 +1602,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "5 min read",
-    category: "Google Sheets Users",
+    categories: ["Google Sheets Users"],
     summary:
       "Sharing a Sheets file with your CA or family exposes your complete financial history in ways you may not have considered.",
     content: [
@@ -1618,7 +1619,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "5 min read",
-    category: "Google Sheets Users",
+    categories: ["Google Sheets Users"],
     summary:
       "How NAV updates work in Google Sheets, why they are error-prone, and what a better workflow looks like.",
     content: [
@@ -1634,7 +1635,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "5 min read",
-    category: "Google Sheets Users",
+    categories: ["Google Sheets Users"],
     summary:
       "Systematic Investment Plans create a volume and complexity of transactions that spreadsheets handle poorly over time.",
     content: [
@@ -1651,7 +1652,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "5 min read",
-    category: "Google Sheets Users",
+    categories: ["Google Sheets Users"],
     summary:
       "Managing portfolio data for multiple family members in a single spreadsheet creates confusion, errors, and privacy problems.",
     content: [
@@ -1668,7 +1669,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "5 min read",
-    category: "Google Sheets Users",
+    categories: ["Google Sheets Users"],
     summary:
       "Data loss and corruption in spreadsheets is more common than investors expect. Here is what to do and how to prevent it.",
     content: [
@@ -1685,7 +1686,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "5 min read",
-    category: "Google Sheets Users",
+    categories: ["Google Sheets Users"],
     summary:
       "When it comes to filing taxes, the quality of your capital gains data matters. Here is how to evaluate your current method.",
     content: [
@@ -1702,7 +1703,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "5 min read",
-    category: "Google Sheets Users",
+    categories: ["Google Sheets Users"],
     summary:
       "Financial advisors and tax professionals increasingly caution clients against using spreadsheets as their primary investment record.",
     content: [
@@ -1720,7 +1721,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "5 min read",
-    category: "Google Sheets Users",
+    categories: ["Google Sheets Users"],
     summary:
       "A look at the shift happening in how retail investors in India manage their portfolio data, and what is driving it.",
     content: [
@@ -1736,7 +1737,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "5 min read",
-    category: "Google Sheets Users",
+    categories: ["Google Sheets Users"],
     summary:
       "Google Sheets is free, but the time and risk associated with DIY portfolio tracking have a real cost.",
     content: [
@@ -1753,7 +1754,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "5 min read",
-    category: "Google Sheets Users",
+    categories: ["Google Sheets Users"],
     summary:
       "For financial records, version control means knowing exactly what changed, when, and why. Google Sheets does not provide this.",
     content: [
@@ -1770,7 +1771,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "5 min read",
-    category: "Google Sheets Users",
+    categories: ["Google Sheets Users"],
     summary:
       "XIRR is the gold standard for measuring mutual fund returns. Here is how it works and how dedicated software makes it easier to track.",
     content: [
@@ -1787,7 +1788,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "5 min read",
-    category: "Google Sheets Users",
+    categories: ["Google Sheets Users"],
     summary:
       "A practical decision checklist for Indian mutual fund investors evaluating whether to move beyond their spreadsheet.",
     content: [
@@ -1808,7 +1809,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "5 min read",
-    category: "Google Sheets Users",
+    categories: ["Google Sheets Users"],
     summary:
       "Indian income tax regulations require accurate capital gains reporting. Here is what that means for how you keep your investment records.",
     content: [
@@ -1826,7 +1827,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "5 min read",
-    category: "Google Sheets Users",
+    categories: ["Google Sheets Users"],
     summary:
       "For investors nearing or in retirement, portfolio accuracy and simplicity matter more than ever. Spreadsheets deliver neither.",
     content: [
@@ -1842,7 +1843,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "3 min read",
-    category: "Release Notes",
+    categories: ["Release Notes"],
     summary:
       "Version 1.4 adds 22 SEO-focused blog posts targeting Indian mutual fund investors who track their investments in Google Sheets.",
     content: [
@@ -1859,7 +1860,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "4 min read",
-    category: "Platform Guide",
+    categories: ["Platform Guide"],
     summary:
       "Jagdish PMS is built on Caffeine.ai, a no-code/AI platform for building full-stack web apps on the Internet Computer. Here is what that means for you.",
     content: [
@@ -1877,7 +1878,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "5 min read",
-    category: "Platform Guide",
+    categories: ["Platform Guide"],
     summary:
       "A step-by-step walkthrough for making your Caffeine.ai app accessible to the public with a permanent shareable link.",
     content: [
@@ -1896,7 +1897,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "5 min read",
-    category: "Platform Guide",
+    categories: ["Platform Guide"],
     summary:
       "The Caffeine App Market is a public gallery of apps built by the Caffeine community. You can browse, remix, and publish your own apps here.",
     content: [
@@ -1914,7 +1915,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "5 min read",
-    category: "Platform Guide",
+    categories: ["Platform Guide"],
     summary:
       "Replace your default Caffeine URL with a custom domain like myapp.com. Here is how custom domains work on Caffeine.ai.",
     content: [
@@ -1933,7 +1934,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "5 min read",
-    category: "Platform Guide",
+    categories: ["Platform Guide"],
     summary:
       "Caffeine offers a free plan and three paid tiers. Here is a breakdown of what each plan includes and which one fits your needs.",
     content: [
@@ -1953,7 +1954,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "4 min read",
-    category: "Platform Guide",
+    categories: ["Platform Guide"],
     summary:
       "Credits are the currency of the Caffeine platform. Every AI build action consumes credits. Here is how they work.",
     content: [
@@ -1971,7 +1972,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "4 min read",
-    category: "Platform Guide",
+    categories: ["Platform Guide"],
     summary:
       "Every Caffeine app has a draft and a live version. Understanding the difference is essential before sharing your app with real users.",
     content: [
@@ -1989,7 +1990,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "3 min read",
-    category: "Platform Guide",
+    categories: ["Platform Guide"],
     summary:
       "Every Caffeine app gets a free permanent URL. Here is how to find it and when a custom domain makes sense.",
     content: [
@@ -2006,7 +2007,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "3 min read",
-    category: "Platform Guide",
+    categories: ["Platform Guide"],
     summary:
       "Sharing your Caffeine app is simple once it is live. Here is the exact process to get a shareable link.",
     content: [
@@ -2025,7 +2026,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "4 min read",
-    category: "Platform Guide",
+    categories: ["Platform Guide"],
     summary:
       "Caffeine.ai has a permanent free plan. Here is exactly what it includes, what the limits are, and what requires a paid plan.",
     content: [
@@ -2043,7 +2044,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "4 min read",
-    category: "Platform Guide",
+    categories: ["Platform Guide"],
     summary:
       "Caffeine provides built-in analytics for live apps on Plus and Pro plans. Here is what you can see and why it matters.",
     content: [
@@ -2061,7 +2062,7 @@ export const BLOG_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "2 min read",
-    category: "Release Notes",
+    categories: ["Release Notes"],
     summary:
       "Version 1.5 adds 12 blog posts covering the Caffeine.ai platform: publishing, App Market, custom domains, pricing, credits, and more.",
     content: [
@@ -2082,7 +2083,7 @@ export const VERSION_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "4 min read",
-    category: "Version Guide",
+    categories: ["Version Guide"],
     summary:
       "Classic is the starting point — clean, reliable, and built for investors who want a straightforward way to track their mutual fund portfolio without any complexity.",
     content: [
@@ -2100,7 +2101,7 @@ export const VERSION_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "5 min read",
-    category: "Version Guide",
+    categories: ["Version Guide"],
     summary:
       "Advanced builds on Classic with SIP tracking, fund performance comparison, portfolio analytics, and smarter reporting — for investors who want deeper insight.",
     content: [
@@ -2119,7 +2120,7 @@ export const VERSION_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "5 min read",
-    category: "Version Guide",
+    categories: ["Version Guide"],
     summary:
       "Pro brings automation, goal-based investing, and tax optimization tools for serious investors who want a near-professional portfolio management experience.",
     content: [
@@ -2138,7 +2139,7 @@ export const VERSION_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "5 min read",
-    category: "Version Guide",
+    categories: ["Version Guide"],
     summary:
       "Elite adds broker integration, real-time NAV streaming, consolidated account statements (CAS), and priority features for high-net-worth investors.",
     content: [
@@ -2158,7 +2159,7 @@ export const VERSION_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "5 min read",
-    category: "Version Guide",
+    categories: ["Version Guide"],
     summary:
       "Smart introduces intelligent nudges, pattern recognition, and personalized investment recommendations based on your actual portfolio behaviour.",
     content: [
@@ -2178,7 +2179,7 @@ export const VERSION_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "5 min read",
-    category: "Version Guide",
+    categories: ["Version Guide"],
     summary:
       "Wealth goes beyond mutual funds to track your complete financial picture — fixed deposits, PPF, gold, real estate, and stocks — all in one dashboard.",
     content: [
@@ -2198,7 +2199,7 @@ export const VERSION_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "5 min read",
-    category: "Version Guide",
+    categories: ["Version Guide"],
     summary:
       "Tax Expert is purpose-built for tax-conscious investors — with granular capital gains calculations, harvesting strategies, indexation support, and ITR-ready reports.",
     content: [
@@ -2219,7 +2220,7 @@ export const VERSION_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "4 min read",
-    category: "Version Guide",
+    categories: ["Version Guide"],
     summary:
       "Lite strips everything back to the essentials — a minimal, mobile-first experience for investors who just want to check their portfolio value in seconds.",
     content: [
@@ -2239,7 +2240,7 @@ export const VERSION_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "5 min read",
-    category: "Version Guide",
+    categories: ["Version Guide"],
     summary:
       "Ultra combines every feature from all versions into one powerhouse edition — for investors who want the complete Jagdish PMS experience with zero compromises.",
     content: [
@@ -2260,7 +2261,7 @@ export const VERSION_POSTS: StaticBlogPost[] = [
     date: "2026-03-20",
     author: "Jagdish PMS Team",
     readTime: "5 min read",
-    category: "Version Guide",
+    categories: ["Version Guide"],
     summary:
       "Enterprise enables a single account to manage portfolios for multiple family members or clients — with role-based access, consolidated reporting, and advisory tools.",
     content: [
@@ -2275,6 +2276,29 @@ export const VERSION_POSTS: StaticBlogPost[] = [
       "Enterprise is planned for Month 10 of the roadmap — one version per month, culminating in the full Enterprise release. It represents the professional and institutional tier of Jagdish PMS.",
     ],
   },
+  {
+    id: "129",
+    title:
+      "Smart Version Feature: AI Auto-Fill for Transactions with Red/Black Verification",
+    date: "2026-03-21",
+    author: "Jagdish",
+    readTime: "4 min read",
+    categories: ["Version Guide"],
+    summary:
+      "Starting from the Smart version (v5), Jagdish PMS will use AI to auto-fill your transaction entries by reading uploaded mutual fund statements. Auto-filled entries appear in red for review, and turn black once you verify and confirm them.",
+    content: [
+      "We are excited to announce a key feature coming in the Smart version (v5) of Jagdish PMS: AI-powered auto-fill for transaction entries, with a red/black verification system that puts you in control of your data.",
+      "How it works: In the Smart version, once you upload a mutual fund statement to the Document Wallet (introduced in Pro v3), the AI will read the statement and automatically extract transaction details — fund name, units purchased or redeemed, NAV, transaction date, and amount. It then pre-fills the transaction entry form with this data.",
+      "Red entries — unverified: All auto-filled entries appear in red. Red means the entry was populated by AI and has not yet been reviewed by you. This is a clear visual signal: do not treat red entries as confirmed data.",
+      "Review and edit before confirming: For each red entry, you can review the details. If something looks wrong — for example, the AI misread the NAV or picked up an incorrect date — you can edit the field directly before confirming. This ensures you are always in control of what goes into your portfolio records.",
+      "Confirm to turn black: Once you are satisfied that a red entry is correct (or after editing it), you confirm it. The entry turns black — meaning it is now verified and trusted data. Black entries are treated the same as manually entered transactions.",
+      "Why this matters: This is not a rubber-stamp approval step. The ability to edit red entries before confirming them is what makes the approval meaningful. Without it, there would be no point in a review step at all. The red/black system gives you a clear audit trail: you can always tell which entries were AI-assisted and which have been human-verified.",
+      "What types of statements will the AI read? The Smart version AI parser is designed to recognise standard formats used by CAMS, Karvy (KFintech), and NSDL for mutual fund statements. These are the three major registrar and transfer agents (RTAs) in India, and their statement formats are widely used by AMCs.",
+      "Pattern-based parsing: The AI auto-fill in Jagdish PMS uses pattern-based text parsing — it identifies standard fields in known statement formats rather than relying on external AI services. This means your documents are processed locally within the app, with no data sent to third-party AI providers.",
+      "When will this be available? The AI auto-fill feature with red/black verification is planned for the Smart version (v5), scheduled for Month 5 of the release roadmap. The prerequisite is the Document Wallet in Pro (v3), which allows you to upload and store statements in the first place.",
+      "If you are on Classic or Advanced and want to be notified when Smart launches, watch this blog. We will publish a dedicated release announcement with a step-by-step guide on how to use the auto-fill feature when it goes live.",
+    ],
+  },
 ];
 
 // Merge version posts into main array
@@ -2286,7 +2310,7 @@ BLOG_POSTS.push({
   date: "2026-03-20",
   author: "Jagdish PMS Team",
   readTime: "6 min read",
-  category: "Version Guide",
+  categories: ["Version Guide"],
   summary:
     "A sneak peek at the upcoming pricing structure for all 10 Jagdish PMS versions — from the free Classic tier to the fully-featured Enterprise plan. Pricing coming soon.",
   content: [
@@ -2315,7 +2339,7 @@ BLOG_POSTS.push({
   date: "2026-03-21",
   author: "Jagdish",
   readTime: "4 min read",
-  category: "Version Guide",
+  categories: ["Version Guide"],
   summary:
     "Starting from the Pro version, Jagdish PMS will include a built-in document wallet — a secure, organised space to store all your mutual fund statements, CAS reports, and financial documents.",
   content: [
@@ -2328,5 +2352,180 @@ BLOG_POSTS.push({
     "Privacy and security: All uploaded documents are private. No one at Jagdish PMS can access your files. Documents are stored encrypted and are not used for any analytics or profiling. You can delete any document at any time.",
     "When will the Document Wallet be available? The Document Wallet is planned for the Pro version, which is scheduled for Month 3 of the release roadmap. Stay tuned for the official Pro launch announcement on this blog.",
     "If you are currently on Classic and want to be notified when Pro launches, watch this space. We will publish a dedicated release post when the Pro version goes live with the Document Wallet and all its other features.",
+  ],
+});
+
+BLOG_POSTS.push({
+  id: "127",
+  title:
+    "Tax Expert Feature: Bank Reconciliation Statement for MF and Share Market Entries",
+  date: "2026-03-21",
+  author: "Jagdish PMS Team",
+  readTime: "6 min read",
+  categories: ["Version Guide"],
+  summary:
+    "Jagdish PMS Tax Expert version will introduce a bank reconciliation feature that lets you cross-check your mutual fund and equity transactions against your bank statement — ensuring every entry tallies perfectly.",
+  content: [
+    "Introducing Bank Reconciliation in Jagdish PMS Tax Expert (v7). One of the most requested features from serious investors and their chartered accountants is the ability to verify that every investment transaction recorded in the PMS matches a corresponding debit or credit in the bank account. Starting with the Tax Expert version, Jagdish PMS will include a dedicated Bank Reconciliation module to do exactly that.",
+    "What is Bank Reconciliation in PMS? Bank reconciliation is the process of comparing your investment transactions (mutual fund purchases, redemptions, SIP debits, equity share purchases and sales) with your bank statement entries. The goal is to ensure that every transaction recorded in your portfolio management software has a matching bank entry — and that no bank entry is missing from your records.",
+    "How It Works in Jagdish PMS. You will have two options to bring in your bank data: (1) CSV Upload — download your bank statement from your bank's website (most Indian banks offer this), save it as CSV, and upload it directly to Jagdish PMS. The system will automatically parse the date, description, and amount from each row. (2) Manual Entry — if your bank does not support CSV export, you can enter bank statement entries one by one. This is useful for investors who prefer full control or are reconciling a small number of transactions.",
+    "The Reconciliation Report. Once your bank data is loaded, Jagdish PMS compares it against all MF and equity transactions recorded in your portfolio. The report shows three categories: (1) Matched Entries (shown in green) — transactions in your PMS that have a matching bank debit or credit. These are confirmed and accurate. (2) Unmatched PMS Entries (shown in yellow) — transactions recorded in PMS but not found in the bank statement. This may indicate a data entry error or a transaction that was recorded on a different date. (3) Unmatched Bank Entries (shown in red) — bank debits or credits that do not correspond to any transaction in PMS. These may be transactions you forgot to record.",
+    "Manual Linking. Sometimes a transaction matches in amount but not in date (for example, if your bank shows a debit one day after the investment is processed). In such cases, you can manually link a PMS transaction to a bank entry. Once linked, both entries move to the Matched category.",
+    "Export for CA and Audit Use. The complete reconciliation report can be exported as a CSV file. This is extremely useful when preparing for income tax filing or when your CA needs to verify that all investment records are consistent with bank transactions. The exported file includes matched, unmatched PMS, and unmatched bank entries in clearly labelled columns.",
+    "Version Scope and Progression. Tax Expert (v7) will cover bank reconciliation for mutual fund and equity share transactions. In Ultra (v9), the scope will expand to all asset classes — FD, gold, and real estate transactions can also be reconciled. Enterprise (v10) will support multi-user and family-level reconciliation, useful for financial advisors managing multiple client accounts.",
+    "Why This Feature Matters at Tax Time. During ITR filing season, the most common question from investors is: 'Did I record all my transactions correctly?' With bank reconciliation built into Jagdish PMS, you can answer that question with confidence. Any discrepancy is immediately visible, and you can resolve it before filing — avoiding notices from the income tax department due to under-reported gains or missing deductions.",
+    "When Will It Be Available? Bank Reconciliation is planned for the Tax Expert version launch, scheduled for Month 7 of the Jagdish PMS release roadmap. Until then, the feature will appear as 'Coming Soon' in the version switcher. Users on earlier versions can continue using CSV export to manually cross-check their records with their bank passbook.",
+    "Stay Updated. Follow the Jagdish PMS blog for release announcements and feature updates. When Tax Expert goes live, existing users will receive a notification and can upgrade from their current plan at a prorated price.",
+  ],
+});
+
+BLOG_POSTS.push({
+  id: "128",
+  title:
+    "Ultra Feature: Cross-Statement Reconciliation — Find Every Missing Entry Across MF Statements, AMC Statements, and Bank Records",
+  date: "2026-03-21",
+  author: "Jagdish PMS Team",
+  readTime: "7 min read",
+  categories: ["Version Guide"],
+  summary:
+    "The Ultra version of Jagdish PMS will introduce a powerful three-way cross-statement reconciliation feature that compares CAMS/KFintech statements, AMC application statements, and your bank statement to identify every missing or unmatched entry — purchases, dividends, SIPs, redemptions, switches, and bonus units.",
+  content: [
+    "Introducing Cross-Statement Reconciliation in Jagdish PMS Ultra (v9). For serious investors, keeping three sets of records in sync is a genuine challenge: your CAMS or KFintech consolidated statement, the statements sent directly by individual AMCs, and your bank passbook. Even a careful investor can end up with entries that appear in one source but are missing from another. The Ultra version of Jagdish PMS will solve this with a dedicated Cross-Statement Reconciliation module.",
+    "What Is Cross-Statement Reconciliation? This feature takes all three sources of investment data — your CAMS/KFintech statement, your AMC application statements, and your bank statement — and compares them against each other simultaneously. The system identifies every entry that exists in one or two sources but is missing from the third. The result is a comprehensive gap report that gives you complete confidence in the accuracy of your portfolio records.",
+    "What Types of Entries Are Checked? The reconciliation covers every type of mutual fund transaction: Purchases (lump sum investments), Dividend payouts and dividend reinvestments, SIP instalments (every individual SIP debit), Redemptions (partial or full), Switches (fund-to-fund transfers within the same AMC), Bonus units (units allotted by the AMC without any cash transaction). No transaction type is excluded. This is a full-coverage audit of your investment history.",
+    "How the Three Sources Are Compared. Each of the three sources captures investment activity differently. CAMS/KFintech statements are the most comprehensive for mutual fund folio data but may not reflect timing differences in bank processing. AMC application statements are issued by individual fund houses and are the authoritative record for that AMC's funds. Bank statements show the actual cash movement and are the ground truth for money in and money out. By comparing all three simultaneously, the system can detect inconsistencies that a two-way comparison would miss — for example, an entry present in the bank statement and the AMC statement but absent from the CAMS consolidation.",
+    "How Gaps Are Displayed. The reconciliation report is designed to be clear and user-friendly, not overwhelming. Matched entries are shown in green — these appear consistently across all relevant sources and are confirmed accurate. Partial matches are shown in yellow — the entry exists in two sources but is missing from one. The system will explain which source is missing it. Unmatched entries are shown in red — the entry appears in only one source with no corresponding record elsewhere. These require your attention. A summary panel at the top of the report shows a count of green, yellow, and red entries so you can immediately assess the overall health of your records before reviewing individual items.",
+    "Practical Example. Imagine you received a dividend from an HDFC MF fund in March. The dividend entry appears in your HDFC AMC statement and in your bank account as a credit. But when you check your CAMS statement, the dividend is not listed because the CAMS file you uploaded was generated before the dividend was processed. The cross-statement reconciliation will flag this as a yellow entry — present in two sources, missing in one — and you can resolve it either by uploading a newer CAMS statement or by manually confirming the entry as accurate.",
+    "How to Upload Your Statements. You can bring in data from each source in two ways: upload a CSV or PDF export from CAMS, KFintech, or your AMC's investor portal, or enter transactions manually if you prefer not to upload files. Both options are supported for all three sources. You do not need to upload all three sources at once — the feature works with whatever combination you provide, clearly showing which sources have been included in the comparison.",
+    "Export and CA Use. The full reconciliation report can be exported as a CSV file. This is ideal for sharing with your CA during ITR season, for your own records, or for resolving disputes with an AMC or your bank. The export clearly labels each entry with its source, match status, and any notes you have added during manual review.",
+    "Version Roadmap for This Feature. The Cross-Statement Reconciliation feature is planned for the Ultra version (v9), which combines the best features of all earlier versions. Tax Expert (v7) will offer two-way bank reconciliation between PMS and bank records. Ultra (v9) will expand this to a true three-way comparison across all sources. Enterprise (v10) will support multi-user and family-level reconciliation, with advisor-level dashboards.",
+    "When Will This Feature Be Available? Cross-Statement Reconciliation is planned for the Ultra version launch, scheduled for Month 9 of the Jagdish PMS release roadmap. It will be listed as Coming Soon in the version switcher until the Ultra version goes live. Follow this blog for the official Ultra launch announcement and release date.",
+    "Stay Updated. If you are currently on Classic, Advanced, or any earlier version, you can continue building your portfolio records now. By the time Ultra launches, you will have a full history ready to run through the cross-statement reconciliation and verify every entry against your statements and bank records.",
+  ],
+});
+
+BLOG_POSTS.push({
+  id: "130",
+  title:
+    "Enterprise Feature: Built-In Accountancy Module — Complete Financial Management Alongside Your Portfolio",
+  date: "2026-03-21",
+  author: "Jagdish PMS Team",
+  readTime: "6 min read",
+  categories: ["Version Guide"],
+  summary:
+    "The Enterprise version of Jagdish PMS will introduce a built-in basic accountancy module — covering chart of accounts, journal entries, ledger, P&L, and Balance Sheet — with automatic reconciliation against your PMS portfolio entries to ensure nothing is missing or out of sync.",
+  content: [
+    "Introducing the Accountancy Module in Jagdish PMS Enterprise (v10). For financial advisors, chartered accountants, and serious investors managing multiple portfolios, keeping investment records in sync with financial accounts is a constant challenge. The Enterprise version of Jagdish PMS will address this with a fully built-in basic accountancy module — no need for a separate Tally, Zoho Books, or QuickBooks subscription for your investment-related accounts.",
+    "What Is the Accountancy Module? The accountancy module is a basic accounting software built directly into Jagdish PMS. It provides all the core features found in the free tier of leading accountancy tools, tailored specifically for investment and portfolio management use cases. Since it lives inside the same app as your PMS data, it can automatically cross-check both systems and alert you to any discrepancies — no manual export and import required.",
+    "Core Features of the Accountancy Module. The Enterprise accountancy module will include: Chart of Accounts — create and manage income, expense, asset, and liability accounts relevant to your investment activity. Journal Entries and Ledger — record financial transactions with debit/credit entries, with a full ledger view by account. Income and Expense Tracking — categorise investment income (dividends, interest, capital gains) and expenses (advisory fees, brokerage, stamp duty, STT) in one place. Profit and Loss Statement — a monthly or annual P&L report showing your net investment income after all expenses. Balance Sheet — a snapshot of your investment assets, liabilities, and net worth at any point in time.",
+    "PMS and Accountancy Reconciliation. The most powerful aspect of the Enterprise accountancy module is its integration with your PMS portfolio data. Every time you record a transaction in PMS — a purchase, redemption, dividend, or SIP instalment — the system checks whether a corresponding entry exists in the accountancy ledger. If an entry is in PMS but missing from the accountancy records, it is flagged immediately. If an entry is in the accountancy ledger but not in PMS, that is flagged too. This two-way sync check ensures your portfolio records and your financial accounts are always in agreement.",
+    "How Discrepancies Are Shown. The reconciliation between PMS and the accountancy module follows the same user-friendly colour-coded approach used throughout Jagdish PMS: Green entries are fully matched — the same transaction exists in both PMS and the accountancy ledger, with consistent amounts and dates. Yellow entries are partial matches — the transaction exists in both systems but something differs, such as the amount or date. Red entries are unmatched — the transaction exists in one system only and needs your attention.",
+    "Who Is This For? The accountancy module in Enterprise is designed for three types of users: Financial advisors who manage portfolio records for multiple clients and need corresponding financial accounts for each client. Chartered accountants who need a single tool covering both portfolio tracking and basic bookkeeping for their investor clients. Individual high-net-worth investors with complex portfolios who currently maintain separate PMS and accounting records and want to consolidate into one system.",
+    "Why a Built-In Accountancy Tool? Most investors who use a portfolio management tool also maintain some form of accounts — either in Tally, an Excel sheet, or a notebook. Having these two records in separate systems creates the risk of entries being missed, mismatched, or duplicated. By building the accountancy module into Jagdish PMS, we eliminate that gap entirely. Your portfolio data and your financial accounts live in the same place, are automatically cross-checked, and are always in sync.",
+    "Version Roadmap. The accountancy module will be introduced in the Enterprise version (v10), the final and most feature-rich tier of Jagdish PMS. Earlier versions (Tax Expert v7 and Ultra v9) already introduce bank reconciliation and cross-statement gap analysis respectively. Enterprise brings those reconciliation capabilities together with a full accounting layer, making it the most comprehensive version for professional and institutional users.",
+    "When Will This Be Available? The Enterprise version with the built-in accountancy module is planned for Month 10 of the Jagdish PMS release roadmap. It will be listed as Coming Soon in the version switcher until it officially launches. Users on earlier versions can continue using their current plan and upgrade to Enterprise when it is available.",
+    "Stay Updated. Follow the Jagdish PMS blog for release announcements. When Enterprise launches, existing users will receive an upgrade notification and can move to Enterprise at a prorated price. This is the version built for those who want everything — portfolio management, reconciliation, and accounting — in a single tool.",
+  ],
+});
+
+BLOG_POSTS.push({
+  id: "131",
+  title:
+    "Use Jagdish PMS Like a Native App: Add to Home Screen on Android and iOS",
+  date: "2026-03-21",
+  author: "Jagdish",
+  readTime: "5 min read",
+  categories: ["Version Guide"],
+  summary:
+    "Jagdish PMS works like a native app on your phone right now — no download required. Learn how to add it to your home screen on Android and iOS, and find out what we have planned for a fully synchronized Android companion app in the Enterprise version.",
+  content: [
+    "Jagdish PMS is a web application — but that does not mean you have to open a browser and type a URL every time you want to check your portfolio. Both Android and iOS support a feature called Add to Home Screen, which pins the app to your phone home screen exactly like a native app. You get a full-screen experience, no address bar, and one-tap access every time.",
+    "What Does Add to Home Screen Give You? When you add Jagdish PMS to your home screen, you get: A dedicated app icon on your home screen — looks and feels like any other app. Full-screen mode when you open it — the browser address bar disappears and the app fills your entire screen. The same portfolio data you see on your desktop — because it is the same app, accessed from any device. No installation required — no Play Store, no App Store, no download waiting.",
+    "How to Add Jagdish PMS to Your Home Screen on Android. Step 1: Open Jagdish PMS in Google Chrome on your Android phone. Step 2: Tap the three-dot menu in the top-right corner of Chrome. Step 3: Tap Add to Home screen. Step 4: Give the shortcut a name — we suggest Jagdish PMS — and tap Add. Step 5: The app icon will now appear on your home screen. Tap it anytime to open Jagdish PMS in full-screen mode, just like a native app.",
+    "How to Add Jagdish PMS to Your Home Screen on iPhone and iPad. Step 1: Open Jagdish PMS in Safari on your iPhone or iPad. Step 2: Tap the Share button at the bottom of the screen. Step 3: Scroll down and tap Add to Home Screen. Step 4: Give it a name — Jagdish PMS — and tap Add in the top-right corner. Step 5: The app icon will appear on your home screen. Tap it to open Jagdish PMS in full-screen mode without any browser chrome.",
+    "Data Sync Across All Your Devices. Because Jagdish PMS is a web app powered by the Internet Computer blockchain, your data is stored centrally and securely — not on your device. This means: Any transaction you enter on your phone is immediately visible when you open the app on your desktop. Any NAV update you make on your laptop shows up instantly on your phone. There is no manual sync, no cloud backup to configure, and no risk of your data existing only on one device. Everything is always up to date, everywhere.",
+    "Planning: Native Android Companion App in Enterprise Version (v10). We understand that some users want a true native Android app — with features like push notifications, offline access, and tighter integration with the Android operating system. That is why we are planning a native Android companion app as part of the Enterprise version (v10) of Jagdish PMS. Here is what the Android companion app will offer: Real-time synchronization with the web version — any entry made in the Android app will reflect instantly in the web version, and vice versa. The Android app and the web app will share the same portfolio data, the same transaction history, and the same capital gains records at all times. Push notifications for portfolio milestones, NAV updates, and SIP reminders. Offline entry support — record transactions even without an internet connection, with automatic sync when connectivity is restored.",
+    "Why Is the Android App in Enterprise? Building a native Android app is a significant development effort and requires separate infrastructure beyond the current web platform. It makes sense to introduce it at the Enterprise tier (v10) — the most feature-rich version — because Enterprise users are typically advisors, CAs, or high-net-worth investors who need the app on multiple devices and benefit most from push notifications and offline entry. Users on Classic through Ultra already get a near-native experience via Add to Home Screen, which covers most day-to-day usage needs.",
+    "What to Do Right Now. While the native Android app is in development for the Enterprise version, we strongly recommend adding Jagdish PMS to your home screen today. It takes less than a minute, costs nothing, and gives you 90% of the experience of a native app immediately. Follow the steps above for your device and start managing your portfolio from your home screen today.",
+    "Stay Updated. The Enterprise version (v10) with the native Android companion app is planned for Month 10 of the Jagdish PMS release roadmap. Follow this blog for announcements. When the Android app is ready, existing users will be notified and can download it from the Google Play Store as part of their Enterprise subscription.",
+  ],
+});
+
+BLOG_POSTS.push({
+  id: "buy-now-affiliate",
+  title:
+    "Earn While You Invest: Introducing the Buy Now Affiliate Feature in Jagdish PMS Classic (v1)",
+  date: "March 21, 2026",
+  author: "Jagdish",
+  readTime: "5 min read",
+  categories: ["Features"],
+  summary:
+    "Jagdish PMS is adding a Buy Now button next to every mutual fund entry in your Holdings and Transactions pages. This feature connects you directly to the right AMC to invest more — and helps support the platform through affiliate commissions.",
+  content: [
+    "We are pleased to announce a new feature coming to Jagdish PMS starting from the Classic version (v1): a Buy Now button placed directly next to each mutual fund entry in both the Holdings page and the Transactions page. This is available to all users from day one — no upgrade required.",
+    "What Is the Buy Now Button? Every mutual fund entry in your portfolio will now have a Buy Now button next to it. When you click this button, it opens the official investment page for that fund's AMC (Asset Management Company) — where you can invest more units in that fund directly. The button is designed to make acting on your portfolio insights as simple as possible. You see an underperforming fund, a rebalancing opportunity, or simply want to top up a fund you believe in — one click takes you there.",
+    "How the Affiliate Links Work. Jagdish PMS has enrolled in the affiliate programs of Indian mutual fund AMCs across the industry. This means when you click Buy Now and complete an investment through that link, a small commission is credited to Jagdish PMS at no extra cost to you. The NAV, units, and investment amount you receive are identical to what you would get by investing directly through the AMC's website or any other platform. The affiliate commission is paid by the AMC, not deducted from your investment.",
+    "AMC-Wise Links. Each Buy Now button is linked to the specific AMC that manages the fund you are looking at. If you hold HDFC Midcap Opportunities Fund, the button takes you to HDFC Mutual Fund's investment page. If you hold Nippon India Liquid Fund, the button takes you to Nippon India MF. Each AMC has its own affiliate link configured in the system. If an AMC-specific link is not yet set up — for example, for a smaller or newer AMC — a generic investment resource link will be shown instead as a fallback, so the button always has a useful destination.",
+    "Where the Button Appears. The Buy Now button appears in two places in the app: In the Holdings page, next to each fund you currently hold. This is the most natural place to see it — you are reviewing your portfolio and want to add more to a specific fund. In the Transactions page, next to each transaction entry. This helps when you are reviewing past investments and decide you want to repeat or increase a particular fund purchase.",
+    "Visibility and User Control. The Buy Now button is shown to all users by default. If a user does not wish to see affiliate links, they can request removal from the admin. Admin users have the ability to disable the Buy Now button for specific users — ensuring that the feature remains helpful rather than intrusive. There is no global off switch for all users — the default is always visible, which maximises the affiliate earning opportunity while keeping individual user preferences respected.",
+    "Why This Feature Supports the Platform. Jagdish PMS Classic is free. The Buy Now affiliate feature is one of the ways the platform can sustain itself and fund the development of future versions — Advanced, Pro, Elite, Smart, and beyond. Every time a user clicks a Buy Now link and makes an investment, a small commission is earned. Across a growing user base, this creates a meaningful revenue stream that supports continued development, faster feature releases, and the eventual launch of paid versions at competitive prices.",
+    "No Impact on Your Investment. It is important to be clear: the affiliate commission is paid by the AMC, not by you. The NAV you invest at, the number of units you receive, the expense ratio of the fund, and every other term of your investment remain exactly the same as they would be if you invested directly through the AMC's own portal or through any other SEBI-registered platform. The Buy Now link simply attributes the investment to Jagdish PMS for commission tracking purposes.",
+    "Coming in Classic Version (v1). This feature will be available to all users from the Classic version onwards. No upgrade is needed. Log in to Jagdish PMS, go to your Holdings or Transactions page, and you will see the Buy Now button next to each fund entry. We will continue to expand the list of AMC affiliate links over time, covering every major fund house in India.",
+    "Stay tuned for more feature announcements. If you have feedback on this feature or would like to see a specific AMC added to the list, write to us at midja85@gmail.com.",
+  ],
+});
+
+BLOG_POSTS.push({
+  id: "robo-advisory-smart",
+  title:
+    "Smart Version Feature: Robo-Advisory for Your Mutual Fund Portfolio — Intelligent Guidance, Not Investment Advice",
+  date: "2026-03-21",
+  author: "Jagdish PMS Team",
+  readTime: "6 min read",
+  categories: ["Version Guide"],
+  summary:
+    "Jagdish PMS Smart (v5) will introduce a Robo-Advisory module that analyses your portfolio and provides personalised, data-driven suggestions — from rebalancing nudges to tax-saving opportunities and goal tracking. Informational guidance only, not SEBI-registered investment advice.",
+  content: [
+    "Introducing Robo-Advisory in Jagdish PMS Smart (v5). Managing a mutual fund portfolio is not just about recording transactions — it is about making informed decisions over time. The Smart version of Jagdish PMS will introduce a Robo-Advisory module that analyses your portfolio data and provides clear, actionable suggestions to help you stay on track with your financial goals. This is built into the same app you already use for tracking — no separate tool, no additional subscription.",
+    "What Is Robo-Advisory? Robo-Advisory refers to automated, algorithm-driven financial guidance based on your actual portfolio data. Rather than giving generic advice, Jagdish PMS Robo-Advisory reads your specific holdings, transaction history, investment amounts, and stated goals — then tells you exactly what it observes and what you might consider doing. The system does not make decisions for you. It surfaces patterns, flags risks, and highlights opportunities that you might miss when reviewing your portfolio manually.",
+    "Portfolio Health Check. The first thing the Robo-Advisory module does is run a health check on your portfolio. This covers concentration risk — for example, if 60% or more of your portfolio is in a single fund or a single AMC, the system flags this and suggests diversification across fund houses or categories. It also checks for category balance — if your portfolio is entirely in one category such as small-cap equity, it notes the higher risk profile and compares it against your stated risk appetite.",
+    "Rebalancing Suggestions. Over time, as some funds grow faster than others, your original asset allocation shifts. A portfolio that was 60% equity and 40% debt a year ago may now be 75% equity and 25% debt — simply because equity markets performed well. The Robo-Advisory module tracks your target allocation (which you set once during setup) and alerts you when your actual allocation drifts beyond a threshold. It then suggests specific rebalancing actions: for example, 'Consider moving approximately 15% from equity to debt funds to restore your target allocation.'",
+    "Goal-Based Nudges. If you have set financial goals in the app — for example, a retirement corpus of Rs. 1 crore by age 60, or a child education fund of Rs. 50 lakhs in 15 years — the Robo-Advisory module tracks your progress monthly and gives you a clear status. If you are on track, it confirms this. If you are falling short, it calculates how much additional SIP amount would close the gap, and tells you directly: 'At your current SIP rate, you are projected to reach Rs. 72 lakhs by your target date. Increasing your monthly SIP by Rs. 3,500 would bring you back on track.'",
+    "Tax-Saving Suggestions. The module also reviews your tax position each financial year. If you have unused ELSS investment capacity under Section 80C, it will flag this before the March 31 deadline and recommend how much to invest to maximise your tax deduction. It also monitors your short-term and long-term capital gains positions and flags if you are approaching thresholds that would trigger additional tax liability — giving you the option to defer a redemption to the next financial year if timing is flexible.",
+    "Risk Profiling. When you first enable Robo-Advisory, the system walks you through a short risk profiling questionnaire — five to seven questions about your investment horizon, income stability, and comfort with market volatility. Based on your answers, it assigns you a risk profile (Conservative, Moderate, or Aggressive). It then compares your actual portfolio composition against this profile. If your risk profile is Conservative but your portfolio is 80% in small-cap and mid-cap equity, the system will flag the mismatch and suggest steps to align your holdings with your stated risk tolerance.",
+    "Version Progression for Robo-Advisory. The Robo-Advisory feature will evolve as you move through higher versions of Jagdish PMS. Smart (v5) covers the core module — portfolio health, rebalancing, goal tracking, tax nudges, and risk profiling — all based on mutual fund data. Wealth (v6) expands this to multi-asset advisory, including FD maturity tracking, gold allocation analysis, real estate valuation, and equity shares — so you get a holistic view of your entire wealth, not just your MF portfolio. Tax Expert (v7) introduces tax-optimised rebalancing recommendations, ELSS suggestions tied to your exact tax bracket, and tax-loss harvesting guidance. Ultra (v9) combines all of the above into a full robo-advisory engine covering every asset class, every tax scenario, and every goal you have set across your financial life. Enterprise (v10) adds an advisor dashboard — so financial advisors and CAs can run Robo-Advisory reports for all their clients from a single view.",
+    "Important Legal Disclaimer. The Robo-Advisory feature in Jagdish PMS is informational in nature. All suggestions, nudges, and recommendations generated by the system are based on your portfolio data and general financial principles. They are provided for educational and informational purposes only. Jagdish PMS is not a SEBI-registered investment advisor. Nothing in the Robo-Advisory module constitutes personalised investment advice, a solicitation to buy or sell any security, or a guarantee of any financial outcome. Before making any investment decision based on this information, you should consult a SEBI-registered investment advisor who can assess your complete financial situation, risk profile, and specific goals. Past performance of any fund or strategy referenced by the system is not indicative of future results.",
+    "When Will This Feature Be Available? The Robo-Advisory module is planned for the Smart version (v5) launch, scheduled for Month 5 of the Jagdish PMS release roadmap. It will appear as Coming Soon in the version switcher until the Smart version goes live. Users on Classic, Advanced, Pro, and Elite will be notified when Smart launches and can upgrade at that time.",
+    "Stay Updated. Continue building your portfolio records in your current version — the more complete your transaction history, the more accurate and useful the Robo-Advisory insights will be when Smart launches. Follow this blog for the Smart version release announcement.",
+  ],
+});
+
+BLOG_POSTS.push({
+  id: "roadmap-bigger-features-2026",
+  title:
+    "What Is Coming Next: Three Bigger Features Planned for Jagdish PMS Over the Next 2-3 Months",
+  date: "2026-03-21",
+  author: "Jagdish PMS Team",
+  readTime: "7 min read",
+  categories: ["Version Guide", "Features"],
+  summary:
+    "A detailed look at the three major features planned for Jagdish PMS in the next 2 to 3 months — Document Wallet in Pro v3, Bank Reconciliation in Tax Expert v7, and Multi-Asset Tracking in Wealth v6. Here is what each feature will do and why it matters for Indian investors.",
+  content: [
+    "We have been steadily building Jagdish PMS across all ten versions, with a clear roadmap for what comes next. Over the next two to three months, we are planning to deliver three significant features — each one meaningful enough to change how you manage your investments. Here is an honest, detailed look at what is coming, why we chose these three, and what you can expect when they go live.",
+    "Feature 1: Document Wallet in Pro Version (v3). Managing a mutual fund portfolio involves more paperwork than most investors expect. CAS statements from CAMS and KFintech, account statements from individual AMCs, KYC acknowledgement letters, FATCA declarations, folio opening letters, SIP mandate confirmations, redemption receipts — the list grows every year. Most investors keep these either in a physical folder, a WhatsApp storage folder, or a Google Drive folder that never gets properly organised. The Document Wallet in Jagdish PMS Pro (v3) solves this by bringing document storage directly into the same app where you track your portfolio. Think of it as a Google Drive-like storage space, built into Jagdish PMS, dedicated entirely to your mutual fund documents.",
+    "What the Document Wallet will include: Secure upload of PDF, JPG, and PNG files — statements, KYC documents, mandate confirmations, and more. Folder organisation by document type — for example, separate folders for CAS statements, account statements, KYC documents, and tax certificates. Search functionality — find any document by name or type in seconds. Privacy by default — your documents are visible only to you and are stored securely on the Internet Computer blockchain. No size anxiety — designed for the typical volume of MF documents an individual investor accumulates over years of investing.",
+    "Why this matters: When your CA asks for your MF statements in March, you will not spend two hours searching through emails and folders. When you need to check the details of a specific folio, you will have the original account statement a click away. When you switch brokers or platforms, your complete document history stays intact in one place — not scattered across three email accounts and an old phone.",
+    "The Document Wallet will be available in the Pro version (v3), scheduled for release in the coming weeks. Users on Classic and Advanced who upgrade to Pro will immediately have access to the document storage feature alongside all the NAV automation and goal-based investing tools already planned for that version.",
+    "Feature 2: Bank Reconciliation in Tax Expert Version (v7). Every mutual fund transaction you make involves a corresponding bank movement. A purchase means money left your bank. A redemption means money arrived. A dividend meant money came in. In theory, your PMS records and your bank statement should tell the same story. In practice, they often do not — and the gap is almost always discovered at the worst possible time: during ITR filing, during a CA review, or when a large redemption amount seems to be missing.",
+    "Bank Reconciliation in Jagdish PMS Tax Expert (v7) will let you import your bank statement and automatically match every transaction against your PMS records. Here is exactly how it will work: Import options — you can import your bank statement as a CSV file (the export format supported by every major Indian bank including SBI, HDFC, ICICI, Axis, and Kotak) or enter transactions manually if your bank does not provide CSV exports. Automatic matching — the system will compare your bank transactions against your PMS entries by date, amount, and transaction type, and automatically match what it can. Colour-coded results — matched transactions appear in green (amount and date match your PMS entry), partial matches appear in yellow (the transaction exists in both records but something differs), and unmatched entries appear in red (exists in one system only). Export — the full reconciliation report can be downloaded as a CSV and handed directly to your CA for review. Manual override — for any transaction the system cannot match automatically, you can manually link a bank transaction to a PMS entry, so nothing is left unresolved.",
+    "Why this matters: Most investors discover missing transactions only at tax time — when it is too late to fix them cleanly. Bank Reconciliation makes this a monthly or quarterly habit rather than an annual surprise. It also helps flag double entries, missed dividends that were supposed to be reinvested, and SIP instalments that failed but were not recorded in PMS. For Tax Expert users, who are already using the deep capital gains tools and ITR-ready reports, Bank Reconciliation closes the last significant gap between their PMS records and their bank reality.",
+    "Bank Reconciliation will be available in the Tax Expert version (v7). Users who are already running SIP portfolios across multiple AMCs and who file their own ITR will find this feature particularly valuable in the months leading up to the tax filing deadline.",
+    "Feature 3: Multi-Asset Tracking in Wealth Version (v6). Most Indian investors do not have their wealth only in mutual funds. They hold fixed deposits at their bank or post office. They own physical gold — jewellery, coins, or sovereign gold bonds. Many have equity shares held in a demat account at Zerodha, Groww, or through a broker. Some have real estate. Managing all of these through a single portfolio view has never been possible without expensive financial planning software.",
+    "Multi-Asset Tracking in Jagdish PMS Wealth (v6) changes this by allowing you to record and track all your assets — not just mutual funds — in one place. Here is what will be covered: Fixed Deposits — record FD details including bank name, principal, interest rate, tenure, and maturity date. The system will calculate the maturity amount and show you a countdown to maturity. Sovereign Gold Bonds and Physical Gold — record the quantity, purchase price, and current value of your gold holdings. The system will track the gold price (updateable manually or via NAV-style updates) and show you the current value of your gold position. Indian Equity Shares — record your equity share holdings including company name, exchange (NSE/BSE), number of shares, purchase price, and current market price. Capital gains on equity shares (STCG at 20%, LTCG at 12.5% above Rs. 1.25 lakh) will be tracked alongside your mutual fund gains. Combined Portfolio View — a single dashboard showing your total wealth across all asset classes — MF, FD, gold, and equity — with allocation percentages and total current value.",
+    "Why this matters: Most investors significantly underestimate their total wealth because they view each asset in isolation. When you add up your mutual fund portfolio, your FDs, your sovereign gold bonds, and your equity shares in one place, the picture looks very different — and more accurate. Knowing your true asset allocation — 45% equity MF, 15% equity shares, 25% FD, 15% gold — is the starting point for any meaningful financial planning. Without this view, rebalancing decisions are guesswork. With it, they are precise.",
+    "Multi-Asset Tracking will be the defining feature of the Wealth version (v6), scheduled for release as part of the version ladder rollout. Users who have investments beyond mutual funds — which is the majority of Indian investors above the age of 30 — will find the Wealth version the most comprehensive tracking tool they have ever used.",
+    "The Bigger Picture: Why These Three Features Now. These three features were chosen deliberately for this phase of development. The Document Wallet addresses the organisation problem that grows worse the longer you invest. Bank Reconciliation addresses the accuracy problem that surfaces at tax time every year. Multi-Asset Tracking addresses the completeness problem — the fact that most investors cannot answer the simple question 'What is my total net worth today?' because their assets live in separate places.",
+    "Together, they move Jagdish PMS from a mutual fund tracker to a comprehensive personal wealth management tool — while keeping the simplicity and accessibility that make it useful to investors at every level. Every feature will be released with the same care and attention to the Indian investing context — Indian tax rules, Indian asset classes, Indian banks, and Indian regulatory requirements — that defines everything we build.",
+    "Stay Updated. Follow this blog for release announcements for each feature. If you are already using Jagdish PMS and want to be among the first to access these features when they launch, make sure you are on the appropriate version in the version switcher. We will publish a dedicated blog post for each feature launch with a full walkthrough and instructions.",
   ],
 });

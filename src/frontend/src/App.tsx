@@ -37,12 +37,14 @@ import Transactions from "./pages/Transactions";
 import AboutUsPage from "./pages/public/AboutUsPage";
 import ApplicationPage from "./pages/public/ApplicationPage";
 import BlogPage from "./pages/public/BlogPage";
-import ComingSoonPage from "./pages/public/ComingSoonPage";
 import ContactUsPage from "./pages/public/ContactUsPage";
 import DisclaimerPage from "./pages/public/DisclaimerPage";
+import FdLumpsumCalculatorPage from "./pages/public/FdLumpsumCalculatorPage";
 import HomePage from "./pages/public/HomePage";
 import PricingPage from "./pages/public/PricingPage";
 import PrivacyPolicyPage from "./pages/public/PrivacyPolicyPage";
+import SipCalculatorPage from "./pages/public/SipCalculatorPage";
+import StepUpSipCalculatorPage from "./pages/public/StepUpSipCalculatorPage";
 
 const queryClient = new QueryClient();
 
@@ -483,6 +485,12 @@ function PublicWebsite({ onLaunchApp }: { onLaunchApp: () => void }) {
         return <DisclaimerPage />;
       case "privacy":
         return <PrivacyPolicyPage />;
+      case "sip-calculator":
+        return <SipCalculatorPage />;
+      case "stepup-sip-calculator":
+        return <StepUpSipCalculatorPage />;
+      case "fd-lumpsum-calculator":
+        return <FdLumpsumCalculatorPage />;
     }
   };
 

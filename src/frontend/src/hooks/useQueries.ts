@@ -271,6 +271,41 @@ export function useDeletePost() {
   });
 }
 
+export function useAdminRescheduleAllPosts() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      if (!actor) throw new Error("Actor not available");
+      await actor.adminRescheduleAllPosts();
+    },
+    onSuccess: () =>
+      qc.invalidateQueries({
+        predicate: (q) =>
+          ["allPosts", "publishedPosts"].includes(q.queryKey[0] as string),
+      }),
+  });
+}
+
+export function useUpdatePostSchedule() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      postId,
+      scheduledAt,
+    }: { postId: string; scheduledAt: bigint | null }) => {
+      if (!actor) throw new Error("Actor not available");
+      await actor.updatePostSchedule(postId, scheduledAt);
+    },
+    onSuccess: () =>
+      qc.invalidateQueries({
+        predicate: (q) =>
+          ["allPosts", "publishedPosts"].includes(q.queryKey[0] as string),
+      }),
+  });
+}
+
 // ─── Static Page Hooks ────────────────────────────────────────────────────────
 
 export function useGetPageContent(slug: string) {
@@ -281,8 +316,9 @@ export function useGetPageContent(slug: string) {
       if (!actor) return null;
       const all = await actor.getAllPosts();
       return (
-        all.find((p) => p.category === "Static Page" && p.author === slug) ??
-        null
+        all.find(
+          (p) => p.categories.includes("Static Page") && p.author === slug,
+        ) ?? null
       );
     },
     enabled: !!actor && !isFetching,
@@ -310,7 +346,8 @@ export function useSavePageContent() {
           id: existingId,
           title,
           summary: title,
-          category: "Static Page",
+          categories: ["Static Page"],
+          tags: [],
           author: slug,
           readTime: "",
           status: PostStatus.published,
@@ -320,7 +357,8 @@ export function useSavePageContent() {
         await actor.createPost({
           title,
           summary: title,
-          category: "Static Page",
+          categories: ["Static Page"],
+          tags: [],
           author: slug,
           readTime: "",
           status: PostStatus.published,
@@ -414,5 +452,79 @@ export function useAdminGetAllCapitalGains() {
       return (actor as any).adminGetAllCapitalGains();
     },
     enabled: !!actor && !isFetching,
+  });
+}
+
+// ─── Tags & Categories Hooks ──────────────────────────────────────────────────
+
+export function useGetAllTags() {
+  const { actor, isFetching } = useActor();
+  return useQuery<string[]>({
+    queryKey: ["allTags"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getAllTags();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useGetAllCategories() {
+  const { actor, isFetching } = useActor();
+  return useQuery<string[]>({
+    queryKey: ["allBlogCategories"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getAllCategories();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useAddTag() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (tag: string) => {
+      if (!actor) throw new Error("Actor not available");
+      await actor.addTag(tag);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["allTags"] }),
+  });
+}
+
+export function useDeleteTag() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (tag: string) => {
+      if (!actor) throw new Error("Actor not available");
+      await actor.deleteTag(tag);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["allTags"] }),
+  });
+}
+
+export function useAddCategory() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (category: string) => {
+      if (!actor) throw new Error("Actor not available");
+      await actor.addCategory(category);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["allBlogCategories"] }),
+  });
+}
+
+export function useDeleteCategory() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (category: string) => {
+      if (!actor) throw new Error("Actor not available");
+      await actor.deleteCategory(category);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["allBlogCategories"] }),
   });
 }

@@ -12,15 +12,17 @@ import type { Principal } from '@icp-sdk/core/principal';
 
 export interface BlogPost {
   'id' : string,
+  'categories' : Array<string>,
   'status' : PostStatus,
   'title' : string,
   'content' : Array<string>,
   'createdAt' : Time,
+  'tags' : Array<string>,
   'author' : string,
   'readTime' : string,
   'summary' : string,
   'updatedAt' : Time,
-  'category' : string,
+  'scheduledAt' : [] | [Time],
 }
 export interface CapitalGainsReport {
   'totalLtcg' : bigint,
@@ -28,13 +30,15 @@ export interface CapitalGainsReport {
   'details' : Array<FundCapitalGain>,
 }
 export interface CreateBlogPostInput {
+  'categories' : Array<string>,
   'status' : PostStatus,
   'title' : string,
   'content' : Array<string>,
+  'tags' : Array<string>,
   'author' : string,
   'readTime' : string,
   'summary' : string,
-  'category' : string,
+  'scheduledAt' : [] | [Time],
 }
 export interface Fund {
   'id' : string,
@@ -87,30 +91,69 @@ export type TransactionType = { 'buy' : null } |
   { 'sell' : null };
 export interface UpdateBlogPostInput {
   'id' : string,
+  'categories' : Array<string>,
   'status' : PostStatus,
   'title' : string,
   'content' : Array<string>,
+  'tags' : Array<string>,
   'author' : string,
   'readTime' : string,
   'summary' : string,
-  'category' : string,
+  'scheduledAt' : [] | [Time],
+}
+export interface UserCapitalGainsRecord {
+  'userName' : string,
+  'principal' : string,
+  'ltcg' : bigint,
+  'stcg' : bigint,
+  'fundId' : string,
+}
+export interface UserHoldingRecord {
+  'userName' : string,
+  'principal' : string,
+  'fundId' : string,
+  'units' : bigint,
+  'avgCostNav' : bigint,
 }
 export interface UserProfile { 'name' : string }
+export interface UserRecord { 'principal' : string, 'name' : string }
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
+export interface UserTransactionRecord {
+  'userName' : string,
+  'principal' : string,
+  'transactionType' : string,
+  'navPerUnit' : bigint,
+  'date' : Time,
+  'fundId' : string,
+  'units' : bigint,
+  'amount' : bigint,
+}
 export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
+  'addCategory' : ActorMethod<[string], undefined>,
   'addFund' : ActorMethod<[string, string, FundCategory, bigint], undefined>,
+  'addTag' : ActorMethod<[string], undefined>,
   'addTransaction' : ActorMethod<
     [string, TransactionType, bigint, bigint, bigint],
     undefined
   >,
+  'adminGetAllCapitalGains' : ActorMethod<[], Array<UserCapitalGainsRecord>>,
+  'adminGetAllHoldings' : ActorMethod<[], Array<UserHoldingRecord>>,
+  'adminGetAllTransactions' : ActorMethod<[], Array<UserTransactionRecord>>,
+  'adminGetAllUsers' : ActorMethod<[], Array<UserRecord>>,
+  'adminRescheduleAllPosts' : ActorMethod<[], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'bootstrapFirstAdmin' : ActorMethod<[], boolean>,
   'createPost' : ActorMethod<[CreateBlogPostInput], string>,
+  'deleteCategory' : ActorMethod<[string], undefined>,
   'deletePost' : ActorMethod<[string], undefined>,
+  'deleteTag' : ActorMethod<[string], undefined>,
+  'getAllCategories' : ActorMethod<[], Array<string>>,
   'getAllFunds' : ActorMethod<[], Array<Fund>>,
   'getAllPosts' : ActorMethod<[], Array<BlogPost>>,
+  'getAllTags' : ActorMethod<[], Array<string>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getCapitalGainsReport' : ActorMethod<[], CapitalGainsReport>,
@@ -121,11 +164,11 @@ export interface _SERVICE {
   'getPublishedPosts' : ActorMethod<[], Array<BlogPost>>,
   'getTransactions' : ActorMethod<[], Array<Transaction>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
-  'bootstrapFirstAdmin' : ActorMethod<[], boolean>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'updateNav' : ActorMethod<[string, bigint], undefined>,
   'updatePost' : ActorMethod<[UpdateBlogPostInput], undefined>,
+  'updatePostSchedule' : ActorMethod<[string, [] | [Time]], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

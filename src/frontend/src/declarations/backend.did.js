@@ -19,6 +19,35 @@ export const TransactionType = IDL.Variant({
   'sip' : IDL.Null,
   'sell' : IDL.Null,
 });
+export const UserCapitalGainsRecord = IDL.Record({
+  'userName' : IDL.Text,
+  'principal' : IDL.Text,
+  'ltcg' : IDL.Nat,
+  'stcg' : IDL.Nat,
+  'fundId' : IDL.Text,
+});
+export const UserHoldingRecord = IDL.Record({
+  'userName' : IDL.Text,
+  'principal' : IDL.Text,
+  'fundId' : IDL.Text,
+  'units' : IDL.Nat,
+  'avgCostNav' : IDL.Nat,
+});
+export const Time = IDL.Int;
+export const UserTransactionRecord = IDL.Record({
+  'userName' : IDL.Text,
+  'principal' : IDL.Text,
+  'transactionType' : IDL.Text,
+  'navPerUnit' : IDL.Nat,
+  'date' : Time,
+  'fundId' : IDL.Text,
+  'units' : IDL.Nat,
+  'amount' : IDL.Nat,
+});
+export const UserRecord = IDL.Record({
+  'principal' : IDL.Text,
+  'name' : IDL.Text,
+});
 export const UserRole = IDL.Variant({
   'admin' : IDL.Null,
   'user' : IDL.Null,
@@ -30,15 +59,16 @@ export const PostStatus = IDL.Variant({
   'draft' : IDL.Null,
 });
 export const CreateBlogPostInput = IDL.Record({
+  'categories' : IDL.Vec(IDL.Text),
   'status' : PostStatus,
   'title' : IDL.Text,
   'content' : IDL.Vec(IDL.Text),
+  'tags' : IDL.Vec(IDL.Text),
   'author' : IDL.Text,
   'readTime' : IDL.Text,
   'summary' : IDL.Text,
-  'category' : IDL.Text,
+  'scheduledAt' : IDL.Opt(Time),
 });
-export const Time = IDL.Int;
 export const Fund = IDL.Record({
   'id' : IDL.Text,
   'lastNavUpdate' : Time,
@@ -48,15 +78,17 @@ export const Fund = IDL.Record({
 });
 export const BlogPost = IDL.Record({
   'id' : IDL.Text,
+  'categories' : IDL.Vec(IDL.Text),
   'status' : PostStatus,
   'title' : IDL.Text,
   'content' : IDL.Vec(IDL.Text),
   'createdAt' : Time,
+  'tags' : IDL.Vec(IDL.Text),
   'author' : IDL.Text,
   'readTime' : IDL.Text,
   'summary' : IDL.Text,
   'updatedAt' : Time,
-  'category' : IDL.Text,
+  'scheduledAt' : IDL.Opt(Time),
 });
 export const UserProfile = IDL.Record({ 'name' : IDL.Text });
 export const FundCapitalGain = IDL.Record({
@@ -97,28 +129,50 @@ export const Transaction = IDL.Record({
 });
 export const UpdateBlogPostInput = IDL.Record({
   'id' : IDL.Text,
+  'categories' : IDL.Vec(IDL.Text),
   'status' : PostStatus,
   'title' : IDL.Text,
   'content' : IDL.Vec(IDL.Text),
+  'tags' : IDL.Vec(IDL.Text),
   'author' : IDL.Text,
   'readTime' : IDL.Text,
   'summary' : IDL.Text,
-  'category' : IDL.Text,
+  'scheduledAt' : IDL.Opt(Time),
 });
 
 export const idlService = IDL.Service({
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+  'addCategory' : IDL.Func([IDL.Text], [], []),
   'addFund' : IDL.Func([IDL.Text, IDL.Text, FundCategory, IDL.Nat], [], []),
+  'addTag' : IDL.Func([IDL.Text], [], []),
   'addTransaction' : IDL.Func(
       [IDL.Text, TransactionType, IDL.Nat, IDL.Nat, IDL.Nat],
       [],
       [],
     ),
+  'adminGetAllCapitalGains' : IDL.Func(
+      [],
+      [IDL.Vec(UserCapitalGainsRecord)],
+      ['query'],
+    ),
+  'adminGetAllHoldings' : IDL.Func([], [IDL.Vec(UserHoldingRecord)], ['query']),
+  'adminGetAllTransactions' : IDL.Func(
+      [],
+      [IDL.Vec(UserTransactionRecord)],
+      ['query'],
+    ),
+  'adminGetAllUsers' : IDL.Func([], [IDL.Vec(UserRecord)], ['query']),
+  'adminRescheduleAllPosts' : IDL.Func([], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+  'bootstrapFirstAdmin' : IDL.Func([], [IDL.Bool], []),
   'createPost' : IDL.Func([CreateBlogPostInput], [IDL.Text], []),
+  'deleteCategory' : IDL.Func([IDL.Text], [], []),
   'deletePost' : IDL.Func([IDL.Text], [], []),
+  'deleteTag' : IDL.Func([IDL.Text], [], []),
+  'getAllCategories' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
   'getAllFunds' : IDL.Func([], [IDL.Vec(Fund)], ['query']),
   'getAllPosts' : IDL.Func([], [IDL.Vec(BlogPost)], ['query']),
+  'getAllTags' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getCapitalGainsReport' : IDL.Func([], [CapitalGainsReport], []),
@@ -133,11 +187,11 @@ export const idlService = IDL.Service({
       [IDL.Opt(UserProfile)],
       ['query'],
     ),
-  'bootstrapFirstAdmin' : IDL.Func([], [IDL.Bool], []),
-    'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+  'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'updateNav' : IDL.Func([IDL.Text, IDL.Nat], [], []),
   'updatePost' : IDL.Func([UpdateBlogPostInput], [], []),
+  'updatePostSchedule' : IDL.Func([IDL.Text, IDL.Opt(Time)], [], []),
 });
 
 export const idlInitArgs = [];
@@ -154,6 +208,32 @@ export const idlFactory = ({ IDL }) => {
     'sip' : IDL.Null,
     'sell' : IDL.Null,
   });
+  const UserCapitalGainsRecord = IDL.Record({
+    'userName' : IDL.Text,
+    'principal' : IDL.Text,
+    'ltcg' : IDL.Nat,
+    'stcg' : IDL.Nat,
+    'fundId' : IDL.Text,
+  });
+  const UserHoldingRecord = IDL.Record({
+    'userName' : IDL.Text,
+    'principal' : IDL.Text,
+    'fundId' : IDL.Text,
+    'units' : IDL.Nat,
+    'avgCostNav' : IDL.Nat,
+  });
+  const Time = IDL.Int;
+  const UserTransactionRecord = IDL.Record({
+    'userName' : IDL.Text,
+    'principal' : IDL.Text,
+    'transactionType' : IDL.Text,
+    'navPerUnit' : IDL.Nat,
+    'date' : Time,
+    'fundId' : IDL.Text,
+    'units' : IDL.Nat,
+    'amount' : IDL.Nat,
+  });
+  const UserRecord = IDL.Record({ 'principal' : IDL.Text, 'name' : IDL.Text });
   const UserRole = IDL.Variant({
     'admin' : IDL.Null,
     'user' : IDL.Null,
@@ -165,15 +245,16 @@ export const idlFactory = ({ IDL }) => {
     'draft' : IDL.Null,
   });
   const CreateBlogPostInput = IDL.Record({
+    'categories' : IDL.Vec(IDL.Text),
     'status' : PostStatus,
     'title' : IDL.Text,
     'content' : IDL.Vec(IDL.Text),
+    'tags' : IDL.Vec(IDL.Text),
     'author' : IDL.Text,
     'readTime' : IDL.Text,
     'summary' : IDL.Text,
-    'category' : IDL.Text,
+    'scheduledAt' : IDL.Opt(Time),
   });
-  const Time = IDL.Int;
   const Fund = IDL.Record({
     'id' : IDL.Text,
     'lastNavUpdate' : Time,
@@ -183,15 +264,17 @@ export const idlFactory = ({ IDL }) => {
   });
   const BlogPost = IDL.Record({
     'id' : IDL.Text,
+    'categories' : IDL.Vec(IDL.Text),
     'status' : PostStatus,
     'title' : IDL.Text,
     'content' : IDL.Vec(IDL.Text),
     'createdAt' : Time,
+    'tags' : IDL.Vec(IDL.Text),
     'author' : IDL.Text,
     'readTime' : IDL.Text,
     'summary' : IDL.Text,
     'updatedAt' : Time,
-    'category' : IDL.Text,
+    'scheduledAt' : IDL.Opt(Time),
   });
   const UserProfile = IDL.Record({ 'name' : IDL.Text });
   const FundCapitalGain = IDL.Record({
@@ -232,28 +315,54 @@ export const idlFactory = ({ IDL }) => {
   });
   const UpdateBlogPostInput = IDL.Record({
     'id' : IDL.Text,
+    'categories' : IDL.Vec(IDL.Text),
     'status' : PostStatus,
     'title' : IDL.Text,
     'content' : IDL.Vec(IDL.Text),
+    'tags' : IDL.Vec(IDL.Text),
     'author' : IDL.Text,
     'readTime' : IDL.Text,
     'summary' : IDL.Text,
-    'category' : IDL.Text,
+    'scheduledAt' : IDL.Opt(Time),
   });
   
   return IDL.Service({
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+    'addCategory' : IDL.Func([IDL.Text], [], []),
     'addFund' : IDL.Func([IDL.Text, IDL.Text, FundCategory, IDL.Nat], [], []),
+    'addTag' : IDL.Func([IDL.Text], [], []),
     'addTransaction' : IDL.Func(
         [IDL.Text, TransactionType, IDL.Nat, IDL.Nat, IDL.Nat],
         [],
         [],
       ),
+    'adminGetAllCapitalGains' : IDL.Func(
+        [],
+        [IDL.Vec(UserCapitalGainsRecord)],
+        ['query'],
+      ),
+    'adminGetAllHoldings' : IDL.Func(
+        [],
+        [IDL.Vec(UserHoldingRecord)],
+        ['query'],
+      ),
+    'adminGetAllTransactions' : IDL.Func(
+        [],
+        [IDL.Vec(UserTransactionRecord)],
+        ['query'],
+      ),
+    'adminGetAllUsers' : IDL.Func([], [IDL.Vec(UserRecord)], ['query']),
+    'adminRescheduleAllPosts' : IDL.Func([], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+    'bootstrapFirstAdmin' : IDL.Func([], [IDL.Bool], []),
     'createPost' : IDL.Func([CreateBlogPostInput], [IDL.Text], []),
+    'deleteCategory' : IDL.Func([IDL.Text], [], []),
     'deletePost' : IDL.Func([IDL.Text], [], []),
+    'deleteTag' : IDL.Func([IDL.Text], [], []),
+    'getAllCategories' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
     'getAllFunds' : IDL.Func([], [IDL.Vec(Fund)], ['query']),
     'getAllPosts' : IDL.Func([], [IDL.Vec(BlogPost)], ['query']),
+    'getAllTags' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getCapitalGainsReport' : IDL.Func([], [CapitalGainsReport], []),
@@ -268,11 +377,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(UserProfile)],
         ['query'],
       ),
-    'bootstrapFirstAdmin' : IDL.Func([], [IDL.Bool], []),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'updateNav' : IDL.Func([IDL.Text, IDL.Nat], [], []),
     'updatePost' : IDL.Func([UpdateBlogPostInput], [], []),
+    'updatePostSchedule' : IDL.Func([IDL.Text, IDL.Opt(Time)], [], []),
   });
 };
 

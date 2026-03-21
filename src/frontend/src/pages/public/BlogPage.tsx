@@ -2,6 +2,8 @@ import { Badge } from "@/components/ui/badge";
 import {
   PostStatus,
   useCreatePost,
+  useGetAllCategories,
+  useGetAllTags,
   useGetPublishedPosts,
 } from "@/hooks/useQueries";
 import {
@@ -19,7 +21,8 @@ import {
   BLOG_POSTS,
   type StaticBlogPost as BlogPost,
 } from "../../data/blogPosts";
-const CATEGORIES = [
+
+const FALLBACK_CATEGORIES = [
   "All",
   "Vision",
   "Technology",
@@ -66,6 +69,13 @@ const CATEGORY_COLORS: Record<string, string> = {
   "Platform Guide": "oklch(0.50 0.14 290)",
 };
 
+function getCategoryColor(categories: string[]): string {
+  for (const cat of categories) {
+    if (CATEGORY_COLORS[cat]) return CATEGORY_COLORS[cat];
+  }
+  return "oklch(0.52 0.13 185)";
+}
+
 function PostCard({
   post,
   onClick,
@@ -73,7 +83,11 @@ function PostCard({
   post: BlogPost;
   onClick: () => void;
 }) {
-  const color = CATEGORY_COLORS[post.category] ?? "oklch(0.52 0.13 185)";
+  const color = getCategoryColor(post.categories);
+  const tags = post.tags ?? [];
+  const visibleTags = tags.slice(0, 3);
+  const extraTags = tags.length - visibleTags.length;
+
   return (
     <motion.button
       type="button"
@@ -82,22 +96,30 @@ function PostCard({
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -2 }}
       transition={{ duration: 0.25 }}
-      className="text-left w-full rounded-2xl p-6 border transition-shadow hover:shadow-lg"
+      className="text-left w-full rounded-2xl p-6 border transition-shadow hover:shadow-lg flex flex-col"
       style={{
         background: "oklch(0.99 0.005 220)",
         borderColor: "oklch(0.90 0.012 220)",
       }}
     >
       <div className="flex items-start justify-between gap-3 mb-3">
-        <span
-          className="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold"
-          style={{
-            background: `${color}18`,
-            color,
-          }}
-        >
-          {post.category}
-        </span>
+        <div className="flex flex-wrap gap-1">
+          {post.categories.map((cat) => {
+            const catColor = CATEGORY_COLORS[cat] ?? color;
+            return (
+              <span
+                key={cat}
+                className="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold"
+                style={{
+                  background: `${catColor}18`,
+                  color: catColor,
+                }}
+              >
+                {cat}
+              </span>
+            );
+          })}
+        </div>
         <span
           className="text-xs flex items-center gap-1 flex-shrink-0"
           style={{ color: "oklch(0.58 0.018 240)" }}
@@ -113,13 +135,44 @@ function PostCard({
         {post.title}
       </h2>
       <p
-        className="text-sm mb-4 leading-relaxed line-clamp-2"
+        className="text-sm mb-4 leading-relaxed line-clamp-2 flex-1"
         style={{ color: "oklch(0.42 0.018 240)" }}
       >
         {post.summary}
       </p>
+      {/* Tags */}
+      {visibleTags.length > 0 && (
+        <div className="flex flex-wrap gap-1 mb-3">
+          {visibleTags.map((tag) => (
+            <span
+              key={tag}
+              className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs border"
+              style={{
+                borderColor: "oklch(0.75 0.06 185)",
+                color: "oklch(0.42 0.10 185)",
+                background: "oklch(0.96 0.02 185)",
+              }}
+            >
+              <Tag className="w-2.5 h-2.5" />
+              {tag}
+            </span>
+          ))}
+          {extraTags > 0 && (
+            <span
+              className="inline-flex items-center px-2 py-0.5 rounded-full text-xs border"
+              style={{
+                borderColor: "oklch(0.85 0.01 220)",
+                color: "oklch(0.58 0.018 240)",
+                background: "oklch(0.96 0.005 220)",
+              }}
+            >
+              +{extraTags} more
+            </span>
+          )}
+        </div>
+      )}
       <div
-        className="flex items-center gap-4 text-xs"
+        className="flex items-center gap-4 text-xs mt-auto"
         style={{ color: "oklch(0.58 0.018 240)" }}
       >
         <span className="flex items-center gap-1">
@@ -142,7 +195,9 @@ function PostDetail({
   post: BlogPost;
   onBack: () => void;
 }) {
-  const color = CATEGORY_COLORS[post.category] ?? "oklch(0.52 0.13 185)";
+  const color = getCategoryColor(post.categories);
+  const tags = post.tags ?? [];
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -167,12 +222,21 @@ function PostDetail({
           borderColor: "oklch(0.90 0.012 220)",
         }}
       >
-        <span
-          className="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold mb-4"
-          style={{ background: `${color}18`, color }}
-        >
-          {post.category}
-        </span>
+        {/* Categories */}
+        <div className="flex flex-wrap gap-1 mb-4">
+          {post.categories.map((cat) => {
+            const catColor = CATEGORY_COLORS[cat] ?? color;
+            return (
+              <span
+                key={cat}
+                className="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold"
+                style={{ background: `${catColor}18`, color: catColor }}
+              >
+                {cat}
+              </span>
+            );
+          })}
+        </div>
 
         <h1
           className="font-display font-bold text-2xl sm:text-3xl mb-4 leading-snug"
@@ -180,6 +244,26 @@ function PostDetail({
         >
           {post.title}
         </h1>
+
+        {/* Tags below title */}
+        {tags.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mb-4">
+            {tags.map((tag) => (
+              <span
+                key={tag}
+                className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs border font-medium"
+                style={{
+                  borderColor: "oklch(0.75 0.06 185)",
+                  color: "oklch(0.38 0.12 185)",
+                  background: "oklch(0.96 0.02 185)",
+                }}
+              >
+                <Tag className="w-2.5 h-2.5" />
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
 
         <div
           className="flex flex-wrap items-center gap-4 text-xs mb-6 pb-6 border-b"
@@ -241,7 +325,8 @@ function SeedBlogPosts() {
             await mutateAsync({
               title: post.title,
               summary: post.summary,
-              category: post.category,
+              categories: post.categories,
+              tags: post.tags ?? [],
               author: post.author,
               readTime: post.readTime,
               status: PostStatus.published,
@@ -262,7 +347,8 @@ function toLocalPost(bp: {
   id: string;
   title: string;
   summary: string;
-  category: string;
+  categories: string[];
+  tags: string[];
   author: string;
   readTime: string;
   content: string[];
@@ -281,7 +367,8 @@ function toLocalPost(bp: {
     id: bp.id,
     title: bp.title,
     summary: bp.summary,
-    category: bp.category,
+    categories: bp.categories,
+    tags: bp.tags,
     author: bp.author,
     readTime: bp.readTime,
     content: bp.content,
@@ -291,18 +378,47 @@ function toLocalPost(bp: {
 
 export default function BlogPage() {
   const [activeCategory, setActiveCategory] = useState("All");
+  const [activeTag, setActiveTag] = useState<string | null>(null);
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
   const { data: backendPosts, isLoading } = useGetPublishedPosts();
+  const { data: backendCategories } = useGetAllCategories();
+  const { data: backendTags } = useGetAllTags();
+
+  const categories = backendCategories
+    ? ["All", ...backendCategories.filter((c) => c !== "Static Page")]
+    : FALLBACK_CATEGORIES;
 
   const posts: BlogPost[] =
     backendPosts && backendPosts.length > 0
-      ? backendPosts.map(toLocalPost)
+      ? backendPosts
+          .filter((p) => !p.categories.includes("Static Page"))
+          .map(toLocalPost)
       : BLOG_POSTS;
 
-  const filtered =
+  const categoryFiltered =
     activeCategory === "All"
       ? posts
-      : posts.filter((p) => p.category === activeCategory);
+      : posts.filter((p) => p.categories.includes(activeCategory));
+
+  const filtered = activeTag
+    ? categoryFiltered.filter((p) => (p.tags ?? []).includes(activeTag))
+    : categoryFiltered;
+
+  // Tags present in current category-filtered results
+  const availableTags = backendTags
+    ? backendTags.filter((tag) =>
+        categoryFiltered.some((p) => (p.tags ?? []).includes(tag)),
+      )
+    : [];
+
+  const handleCategoryClick = (cat: string) => {
+    setActiveCategory(cat);
+    setActiveTag(null);
+  };
+
+  const handleTagClick = (tag: string) => {
+    setActiveTag((prev) => (prev === tag ? null : tag));
+  };
 
   if (selectedPost) {
     return (
@@ -358,12 +474,13 @@ export default function BlogPage() {
       </motion.div>
 
       {/* Category Filter */}
-      <div className="flex flex-wrap gap-2 mb-8">
-        {CATEGORIES.map((cat) => (
+      <div className="flex flex-wrap gap-2 mb-4">
+        {categories.map((cat) => (
           <button
             key={cat}
             type="button"
-            onClick={() => setActiveCategory(cat)}
+            onClick={() => handleCategoryClick(cat)}
+            data-ocid="blog.category.tab"
             className="px-3 py-1.5 rounded-full text-xs font-medium transition-all"
             style={{
               background:
@@ -378,6 +495,33 @@ export default function BlogPage() {
         ))}
       </div>
 
+      {/* Tag Filter */}
+      {availableTags.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-6">
+          {availableTags.map((tag) => (
+            <button
+              key={tag}
+              type="button"
+              onClick={() => handleTagClick(tag)}
+              data-ocid="blog.tag.toggle"
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all border"
+              style={{
+                background:
+                  activeTag === tag ? "oklch(0.50 0.13 185)" : "transparent",
+                color: activeTag === tag ? "white" : "oklch(0.42 0.10 185)",
+                borderColor:
+                  activeTag === tag
+                    ? "oklch(0.50 0.13 185)"
+                    : "oklch(0.75 0.06 185)",
+              }}
+            >
+              <Tag className="w-2.5 h-2.5" />
+              {tag}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Count */}
       <div
         className="flex items-center gap-1.5 text-xs mb-6"
@@ -385,6 +529,18 @@ export default function BlogPage() {
       >
         <Tag className="w-3 h-3" />
         {filtered.length} post{filtered.length !== 1 ? "s" : ""}
+        {activeTag && (
+          <span className="ml-1">
+            tagged <strong>{activeTag}</strong>{" "}
+            <button
+              type="button"
+              onClick={() => setActiveTag(null)}
+              className="underline ml-0.5"
+            >
+              (clear)
+            </button>
+          </span>
+        )}
       </div>
 
       {/* Grid */}

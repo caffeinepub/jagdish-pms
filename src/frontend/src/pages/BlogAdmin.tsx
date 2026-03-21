@@ -33,14 +33,23 @@ import type {
 } from "@/hooks/useQueries";
 import {
   PostStatus,
+  useAddCategory,
+  useAddTag,
+  useAdminRescheduleAllPosts,
   useCreatePost,
+  useDeleteCategory,
   useDeletePost,
+  useDeleteTag,
+  useGetAllCategories,
   useGetAllPosts,
+  useGetAllTags,
   useGetPageContent,
   useSavePageContent,
   useUpdatePost,
+  useUpdatePostSchedule,
 } from "@/hooks/useQueries";
 import {
+  CalendarClock,
   Edit2,
   Eye,
   EyeOff,
@@ -49,6 +58,8 @@ import {
   HardDrive,
   Loader2,
   Plus,
+  RefreshCw,
+  Tag,
   Trash2,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
@@ -57,7 +68,7 @@ import { toast } from "sonner";
 import { DataExportTab } from "../components/DataExportTab";
 import { BLOG_POSTS } from "../data/blogPosts";
 
-const BLOG_CATEGORIES = [
+const FALLBACK_BLOG_CATEGORIES = [
   "Vision",
   "Technology",
   "Architecture",
@@ -77,6 +88,7 @@ const BLOG_CATEGORIES = [
   "Excel Users",
   "Google Sheets Users",
   "Platform Guide",
+  "Version Guide",
 ];
 
 type StatusFilter = "all" | "published" | "draft" | "private";
@@ -87,14 +99,33 @@ function statusLabel(status: PostStatus): string {
   return "Private";
 }
 
-function StatusBadge({ status }: { status: PostStatus }) {
-  if (status === PostStatus.published) {
-    return (
-      <Badge className="bg-green-100 text-green-800 border-green-200 hover:bg-green-100">
-        Published
-      </Badge>
-    );
-  }
+// Convert nanoseconds bigint → JS Date
+function nsToDate(ns: bigint): Date {
+  return new Date(Number(ns / 1_000_000n));
+}
+
+// Convert JS Date → nanoseconds bigint
+function dateToNs(date: Date): bigint {
+  return BigInt(date.getTime()) * 1_000_000n;
+}
+
+function isScheduledInFuture(scheduledAt?: bigint): boolean {
+  if (!scheduledAt) return false;
+  return scheduledAt > BigInt(Date.now()) * 1_000_000n;
+}
+
+function formatScheduledDate(ns: bigint): string {
+  return nsToDate(ns).toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function StatusBadge({
+  status,
+  scheduledAt,
+}: { status: PostStatus; scheduledAt?: bigint }) {
   if (status === PostStatus.draft) {
     return (
       <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-100">
@@ -102,9 +133,25 @@ function StatusBadge({ status }: { status: PostStatus }) {
       </Badge>
     );
   }
+  if (status === PostStatus.privateVisibility) {
+    return (
+      <Badge className="bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-100">
+        Private
+      </Badge>
+    );
+  }
+  // Published
+  if (isScheduledInFuture(scheduledAt)) {
+    return (
+      <Badge className="bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-100 gap-1">
+        <CalendarClock className="w-3 h-3" />
+        Scheduled: {formatScheduledDate(scheduledAt!)}
+      </Badge>
+    );
+  }
   return (
-    <Badge className="bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-100">
-      Private
+    <Badge className="bg-green-100 text-green-800 border-green-200 hover:bg-green-100">
+      Live
     </Badge>
   );
 }
@@ -112,7 +159,8 @@ function StatusBadge({ status }: { status: PostStatus }) {
 interface PostFormData {
   title: string;
   summary: string;
-  category: string;
+  categories: string[];
+  tags: string[];
   author: string;
   readTime: string;
   status: PostStatus;
@@ -122,7 +170,8 @@ interface PostFormData {
 const DEFAULT_FORM: PostFormData = {
   title: "",
   summary: "",
-  category: "Vision",
+  categories: [],
+  tags: [],
   author: "Jagdish",
   readTime: "5 min read",
   status: PostStatus.draft,
@@ -134,11 +183,15 @@ function PostForm({
   onSave,
   onCancel,
   isSaving,
+  availableCategories,
+  availableTags,
 }: {
   initial: PostFormData;
   onSave: (data: PostFormData) => void;
   onCancel: () => void;
   isSaving: boolean;
+  availableCategories: string[];
+  availableTags: string[];
 }) {
   const [form, setForm] = useState<PostFormData>(initial);
   const paraKeys = Array.from({ length: 20 }, (_, i) => i);
@@ -148,6 +201,24 @@ function PostForm({
     value: string | PostStatus | string[],
   ) => {
     setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const toggleCategory = (cat: string) => {
+    setForm((prev) => ({
+      ...prev,
+      categories: prev.categories.includes(cat)
+        ? prev.categories.filter((c) => c !== cat)
+        : [...prev.categories, cat],
+    }));
+  };
+
+  const toggleTag = (tag: string) => {
+    setForm((prev) => ({
+      ...prev,
+      tags: prev.tags.includes(tag)
+        ? prev.tags.filter((t) => t !== tag)
+        : [...prev.tags, tag],
+    }));
   };
 
   const updateParagraph = (index: number, value: string) => {
@@ -215,51 +286,101 @@ function PostForm({
           />
         </div>
 
-        {/* Row: Category + Status */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <Label className="text-sm font-medium">Category</Label>
-            <Select
-              value={form.category}
-              onValueChange={(v) => set("category", v)}
-            >
-              <SelectTrigger
-                data-ocid="blog_admin.category.select"
-                className="text-sm"
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {BLOG_CATEGORIES.map((cat) => (
-                  <SelectItem key={cat} value={cat} className="text-sm">
-                    {cat}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        {/* Categories multi-select */}
+        <div className="space-y-1.5">
+          <Label className="text-sm font-medium">
+            Categories{" "}
+            <span className="text-xs text-muted-foreground font-normal">
+              (select one or more)
+            </span>
+          </Label>
+          <div
+            className="border border-border rounded-md overflow-y-auto max-h-36 p-2 flex flex-wrap gap-1.5"
+            data-ocid="blog_admin.categories.select"
+          >
+            {availableCategories.map((cat) => {
+              const active = form.categories.includes(cat);
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => toggleCategory(cat)}
+                  className="px-2.5 py-1 rounded-full text-xs font-medium transition-all border"
+                  style={{
+                    background: active ? "oklch(0.35 0.10 240)" : "transparent",
+                    color: active ? "white" : "oklch(0.42 0.018 240)",
+                    borderColor: active
+                      ? "oklch(0.35 0.10 240)"
+                      : "oklch(0.85 0.01 220)",
+                  }}
+                >
+                  {cat}
+                </button>
+              );
+            })}
           </div>
+        </div>
 
+        {/* Tags multi-select */}
+        {availableTags.length > 0 && (
           <div className="space-y-1.5">
-            <Label className="text-sm font-medium">Status</Label>
-            <Select
-              value={form.status}
-              onValueChange={(v) => set("status", v as PostStatus)}
+            <Label className="text-sm font-medium">
+              Tags{" "}
+              <span className="text-xs text-muted-foreground font-normal">
+                (select any)
+              </span>
+            </Label>
+            <div
+              className="border border-border rounded-md overflow-y-auto max-h-28 p-2 flex flex-wrap gap-1.5"
+              data-ocid="blog_admin.tags.select"
             >
-              <SelectTrigger
-                data-ocid="blog_admin.status.select"
-                className="text-sm"
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={PostStatus.draft}>Draft</SelectItem>
-                <SelectItem value={PostStatus.published}>Published</SelectItem>
-                <SelectItem value={PostStatus.privateVisibility}>
-                  Private
-                </SelectItem>
-              </SelectContent>
-            </Select>
+              {availableTags.map((tag) => {
+                const active = form.tags.includes(tag);
+                return (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => toggleTag(tag)}
+                    className="px-2.5 py-1 rounded-full text-xs font-medium transition-all border"
+                    style={{
+                      background: active
+                        ? "oklch(0.50 0.13 185)"
+                        : "transparent",
+                      color: active ? "white" : "oklch(0.42 0.018 240)",
+                      borderColor: active
+                        ? "oklch(0.50 0.13 185)"
+                        : "oklch(0.85 0.01 220)",
+                    }}
+                  >
+                    {tag}
+                  </button>
+                );
+              })}
+            </div>
           </div>
+        )}
+
+        {/* Status */}
+        <div className="space-y-1.5">
+          <Label className="text-sm font-medium">Status</Label>
+          <Select
+            value={form.status}
+            onValueChange={(v) => set("status", v as PostStatus)}
+          >
+            <SelectTrigger
+              data-ocid="blog_admin.status.select"
+              className="text-sm"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={PostStatus.draft}>Draft</SelectItem>
+              <SelectItem value={PostStatus.published}>Published</SelectItem>
+              <SelectItem value={PostStatus.privateVisibility}>
+                Private
+              </SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Row: Author + Read Time */}
@@ -361,6 +482,47 @@ function PostForm({
         </Button>
       </div>
     </form>
+  );
+}
+
+// ─── Schedule Date Cell ───────────────────────────────────────────────────────
+
+function ScheduleDateCell({ post }: { post: BlogPost }) {
+  const updateSchedule = useUpdatePostSchedule();
+
+  // Convert current scheduledAt to YYYY-MM-DD for <input type="date">
+  const toInputValue = (ns?: bigint): string => {
+    if (!ns) return "";
+    const d = nsToDate(ns);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  };
+
+  const [dateVal, setDateVal] = useState(toInputValue(post.scheduledAt));
+
+  const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setDateVal(val);
+    try {
+      const ns = val ? dateToNs(new Date(val)) : null;
+      await updateSchedule.mutateAsync({ postId: post.id, scheduledAt: ns });
+      toast.success(val ? "Schedule updated" : "Schedule cleared");
+    } catch {
+      toast.error("Failed to update schedule");
+    }
+  };
+
+  return (
+    <input
+      type="date"
+      value={dateVal}
+      onChange={handleChange}
+      data-ocid="blog_admin.schedule.input"
+      className="text-xs border border-border rounded px-2 py-1 bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer"
+      style={{ minWidth: "130px" }}
+    />
   );
 }
 
@@ -648,19 +810,288 @@ function PagesTab() {
 
 // ─── Main BlogAdmin Component ─────────────────────────────────────────────────
 
+// ─── Tags & Categories Tab ───────────────────────────────────────────────────
+
+function TagsCategoriesTab() {
+  const { data: categories = [], isLoading: catsLoading } =
+    useGetAllCategories();
+  const { data: tags = [], isLoading: tagsLoading } = useGetAllTags();
+  const addCategory = useAddCategory();
+  const deleteCategory = useDeleteCategory();
+  const addTag = useAddTag();
+  const deleteTag = useDeleteTag();
+
+  const [newCategory, setNewCategory] = useState("");
+  const [newTag, setNewTag] = useState("");
+
+  const handleAddCategory = async () => {
+    const val = newCategory.trim();
+    if (!val) return;
+    try {
+      await addCategory.mutateAsync(val);
+      setNewCategory("");
+      toast.success(`Category "${val}" added`);
+    } catch {
+      toast.error("Failed to add category");
+    }
+  };
+
+  const handleDeleteCategory = async (cat: string) => {
+    try {
+      await deleteCategory.mutateAsync(cat);
+      toast.success(`Category "${cat}" deleted`);
+    } catch {
+      toast.error("Failed to delete category");
+    }
+  };
+
+  const handleAddTag = async () => {
+    const val = newTag.trim();
+    if (!val) return;
+    try {
+      await addTag.mutateAsync(val);
+      setNewTag("");
+      toast.success(`Tag "${val}" added`);
+    } catch {
+      toast.error("Failed to add tag");
+    }
+  };
+
+  const handleDeleteTag = async (tag: string) => {
+    try {
+      await deleteTag.mutateAsync(tag);
+      toast.success(`Tag "${tag}" deleted`);
+    } catch {
+      toast.error("Failed to delete tag");
+    }
+  };
+
+  return (
+    <div className="grid md:grid-cols-2 gap-6">
+      {/* Categories */}
+      <div
+        className="rounded-xl border border-border p-5 space-y-4"
+        style={{ background: "oklch(0.99 0.004 220)" }}
+        data-ocid="tags_categories.categories.panel"
+      >
+        <div className="flex items-center gap-2">
+          <div
+            className="w-8 h-8 rounded-lg flex items-center justify-center"
+            style={{ background: "oklch(0.35 0.10 240 / 0.10)" }}
+          >
+            <Globe
+              className="w-4 h-4"
+              style={{ color: "oklch(0.35 0.10 240)" }}
+            />
+          </div>
+          <div>
+            <h3
+              className="font-semibold text-sm"
+              style={{ color: "oklch(0.18 0.065 240)" }}
+            >
+              Categories
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              Predefined list for blog posts
+            </p>
+          </div>
+        </div>
+
+        {catsLoading ? (
+          <div
+            className="flex items-center gap-2 py-4 text-sm text-muted-foreground"
+            data-ocid="tags_categories.categories.loading_state"
+          >
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Loading categories...
+          </div>
+        ) : (
+          <div className="space-y-1.5 max-h-60 overflow-y-auto pr-1">
+            {categories.length === 0 ? (
+              <p
+                className="text-xs text-muted-foreground py-4 text-center"
+                data-ocid="tags_categories.categories.empty_state"
+              >
+                No categories yet. Add one below.
+              </p>
+            ) : (
+              categories.map((cat, idx) => (
+                <div
+                  key={cat}
+                  data-ocid={`tags_categories.category.item.${idx + 1}`}
+                  className="flex items-center justify-between rounded-lg px-3 py-2 group"
+                  style={{ background: "oklch(0.965 0.008 220)" }}
+                >
+                  <span
+                    className="text-sm"
+                    style={{ color: "oklch(0.25 0.05 240)" }}
+                  >
+                    {cat}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteCategory(cat)}
+                    disabled={deleteCategory.isPending}
+                    data-ocid={`tags_categories.category.delete_button.${idx + 1}`}
+                    className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-50 text-muted-foreground hover:text-red-600 transition-all"
+                    title={`Delete "${cat}"`}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {/* Add category */}
+        <div className="flex gap-2 pt-2 border-t border-border">
+          <Input
+            value={newCategory}
+            onChange={(e) => setNewCategory(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleAddCategory()}
+            placeholder="New category name..."
+            className="text-sm h-8"
+            data-ocid="tags_categories.category.input"
+          />
+          <Button
+            type="button"
+            size="sm"
+            onClick={handleAddCategory}
+            disabled={addCategory.isPending || !newCategory.trim()}
+            data-ocid="tags_categories.category.primary_button"
+            className="h-8 px-3 shrink-0"
+            style={{ background: "oklch(0.35 0.10 240)", color: "white" }}
+          >
+            {addCategory.isPending ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Plus className="w-3.5 h-3.5" />
+            )}
+          </Button>
+        </div>
+      </div>
+
+      {/* Tags */}
+      <div
+        className="rounded-xl border border-border p-5 space-y-4"
+        style={{ background: "oklch(0.99 0.004 220)" }}
+        data-ocid="tags_categories.tags.panel"
+      >
+        <div className="flex items-center gap-2">
+          <div
+            className="w-8 h-8 rounded-lg flex items-center justify-center"
+            style={{ background: "oklch(0.50 0.13 185 / 0.10)" }}
+          >
+            <Tag
+              className="w-4 h-4"
+              style={{ color: "oklch(0.50 0.13 185)" }}
+            />
+          </div>
+          <div>
+            <h3
+              className="font-semibold text-sm"
+              style={{ color: "oklch(0.18 0.065 240)" }}
+            >
+              Tags
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              Clickable filter labels for posts
+            </p>
+          </div>
+        </div>
+
+        {tagsLoading ? (
+          <div
+            className="flex items-center gap-2 py-4 text-sm text-muted-foreground"
+            data-ocid="tags_categories.tags.loading_state"
+          >
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Loading tags...
+          </div>
+        ) : (
+          <div className="space-y-1.5 max-h-60 overflow-y-auto pr-1">
+            {tags.length === 0 ? (
+              <p
+                className="text-xs text-muted-foreground py-4 text-center"
+                data-ocid="tags_categories.tags.empty_state"
+              >
+                No tags yet. Add one below.
+              </p>
+            ) : (
+              tags.map((tag, idx) => (
+                <div
+                  key={tag}
+                  data-ocid={`tags_categories.tag.item.${idx + 1}`}
+                  className="flex items-center justify-between rounded-lg px-3 py-2 group"
+                  style={{ background: "oklch(0.965 0.008 220)" }}
+                >
+                  <span className="text-sm flex items-center gap-1.5">
+                    <Tag className="w-3 h-3 text-muted-foreground" />
+                    <span style={{ color: "oklch(0.25 0.05 240)" }}>{tag}</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteTag(tag)}
+                    disabled={deleteTag.isPending}
+                    data-ocid={`tags_categories.tag.delete_button.${idx + 1}`}
+                    className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-50 text-muted-foreground hover:text-red-600 transition-all"
+                    title={`Delete "${tag}"`}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {/* Add tag */}
+        <div className="flex gap-2 pt-2 border-t border-border">
+          <Input
+            value={newTag}
+            onChange={(e) => setNewTag(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleAddTag()}
+            placeholder="New tag name..."
+            className="text-sm h-8"
+            data-ocid="tags_categories.tag.input"
+          />
+          <Button
+            type="button"
+            size="sm"
+            onClick={handleAddTag}
+            disabled={addTag.isPending || !newTag.trim()}
+            data-ocid="tags_categories.tag.primary_button"
+            className="h-8 px-3 shrink-0"
+            style={{ background: "oklch(0.50 0.13 185)", color: "white" }}
+          >
+            {addTag.isPending ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Plus className="w-3.5 h-3.5" />
+            )}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function BlogAdmin() {
   const { data: posts = [], isLoading, isFetched } = useGetAllPosts();
   const createPost = useCreatePost();
   const updatePost = useUpdatePost();
   const deletePost = useDeletePost();
+  const rescheduleAll = useAdminRescheduleAllPosts();
 
-  const [adminTab, setAdminTab] = useState<"posts" | "pages" | "data-export">(
-    "posts",
-  );
+  const [adminTab, setAdminTab] = useState<
+    "posts" | "pages" | "data-export" | "tags-categories"
+  >("posts");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<BlogPost | null>(null);
+  const [rescheduleDialogOpen, setRescheduleDialogOpen] = useState(false);
   const [seedProgress, setSeedProgress] = useState(0);
   const [isSeeding, setIsSeeding] = useState(false);
   const seededRef = useRef(false);
@@ -676,7 +1107,8 @@ export default function BlogAdmin() {
           await createPost.mutateAsync({
             title: post.title,
             summary: post.summary,
-            category: post.category,
+            categories: post.categories,
+            tags: post.tags ?? [],
             author: post.author,
             readTime: post.readTime,
             status: PostStatus.published,
@@ -694,7 +1126,7 @@ export default function BlogAdmin() {
   }, [isFetched, posts.length, createPost.mutateAsync]);
 
   // Filter out static pages from blog post list
-  const blogPosts = posts.filter((p) => p.category !== "Static Page");
+  const blogPosts = posts.filter((p) => !p.categories.includes("Static Page"));
 
   const filteredPosts = blogPosts.filter((p) => {
     if (statusFilter === "all") return true;
@@ -731,7 +1163,8 @@ export default function BlogAdmin() {
           id: editingPost.id,
           title: data.title,
           summary: data.summary,
-          category: data.category,
+          categories: data.categories,
+          tags: data.tags,
           author: data.author,
           readTime: data.readTime,
           status: data.status,
@@ -743,7 +1176,8 @@ export default function BlogAdmin() {
         const input: CreateBlogPostInput = {
           title: data.title,
           summary: data.summary,
-          category: data.category,
+          categories: data.categories,
+          tags: data.tags,
           author: data.author,
           readTime: data.readTime,
           status: data.status,
@@ -764,7 +1198,8 @@ export default function BlogAdmin() {
         id: post.id,
         title: post.title,
         summary: post.summary,
-        category: post.category,
+        categories: post.categories,
+        tags: post.tags,
         author: post.author,
         readTime: post.readTime,
         status,
@@ -787,11 +1222,28 @@ export default function BlogAdmin() {
     }
   };
 
+  const handleRescheduleAll = async () => {
+    try {
+      await rescheduleAll.mutateAsync();
+      toast.success(
+        "All posts rescheduled — oldest post today, one every 2 days",
+      );
+      setRescheduleDialogOpen(false);
+    } catch {
+      toast.error("Failed to reschedule posts");
+    }
+  };
+
+  const { data: allCategories = FALLBACK_BLOG_CATEGORIES } =
+    useGetAllCategories();
+  const { data: allTags = [] } = useGetAllTags();
+
   const formInitial: PostFormData = editingPost
     ? {
         title: editingPost.title,
         summary: editingPost.summary,
-        category: editingPost.category,
+        categories: editingPost.categories,
+        tags: editingPost.tags,
         author: editingPost.author,
         readTime: editingPost.readTime,
         status: editingPost.status,
@@ -820,15 +1272,26 @@ export default function BlogAdmin() {
           </p>
         </div>
         {adminTab === "posts" && (
-          <Button
-            onClick={openNew}
-            data-ocid="blog_admin.new_post.button"
-            className="gap-2"
-            style={{ background: "oklch(0.35 0.10 240)", color: "white" }}
-          >
-            <Plus className="w-4 h-4" />
-            New Post
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setRescheduleDialogOpen(true)}
+              data-ocid="blog_admin.reschedule_all.button"
+              className="gap-2 text-sm"
+            >
+              <CalendarClock className="w-4 h-4" />
+              Reschedule All
+            </Button>
+            <Button
+              onClick={openNew}
+              data-ocid="blog_admin.new_post.button"
+              className="gap-2"
+              style={{ background: "oklch(0.35 0.10 240)", color: "white" }}
+            >
+              <Plus className="w-4 h-4" />
+              New Post
+            </Button>
+          </div>
         )}
       </motion.div>
 
@@ -841,7 +1304,9 @@ export default function BlogAdmin() {
         <Tabs
           value={adminTab}
           onValueChange={(v) =>
-            setAdminTab(v as "posts" | "pages" | "data-export")
+            setAdminTab(
+              v as "posts" | "pages" | "data-export" | "tags-categories",
+            )
           }
         >
           <TabsList className="h-9 mb-6" data-ocid="blog_admin.section.tab">
@@ -856,6 +1321,13 @@ export default function BlogAdmin() {
             <TabsTrigger value="data-export" className="text-xs px-5 gap-1.5">
               <HardDrive className="w-3.5 h-3.5" />
               Data Export
+            </TabsTrigger>
+            <TabsTrigger
+              value="tags-categories"
+              className="text-xs px-5 gap-1.5"
+            >
+              <Tag className="w-3.5 h-3.5" />
+              Tags &amp; Categories
             </TabsTrigger>
           </TabsList>
 
@@ -975,6 +1447,9 @@ export default function BlogAdmin() {
                         <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                           Status
                         </th>
+                        <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden xl:table-cell">
+                          Schedule
+                        </th>
                         <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden lg:table-cell">
                           Author
                         </th>
@@ -1008,12 +1483,25 @@ export default function BlogAdmin() {
                               </p>
                             </td>
                             <td className="px-4 py-3 hidden md:table-cell">
-                              <span className="text-xs text-muted-foreground">
-                                {post.category}
-                              </span>
+                              <div className="flex flex-wrap gap-1">
+                                {post.categories.map((cat) => (
+                                  <span
+                                    key={cat}
+                                    className="text-xs text-muted-foreground"
+                                  >
+                                    {cat}
+                                  </span>
+                                ))}
+                              </div>
                             </td>
                             <td className="px-4 py-3">
-                              <StatusBadge status={post.status} />
+                              <StatusBadge
+                                status={post.status}
+                                scheduledAt={post.scheduledAt}
+                              />
+                            </td>
+                            <td className="px-4 py-3 hidden xl:table-cell">
+                              <ScheduleDateCell post={post} />
                             </td>
                             <td className="px-4 py-3 hidden lg:table-cell">
                               <span className="text-xs text-muted-foreground">
@@ -1107,6 +1595,11 @@ export default function BlogAdmin() {
           <TabsContent value="data-export" className="mt-0">
             <DataExportTab />
           </TabsContent>
+
+          {/* ── Tags & Categories Tab ── */}
+          <TabsContent value="tags-categories" className="mt-0">
+            <TagsCategoriesTab />
+          </TabsContent>
         </Tabs>
       </motion.div>
 
@@ -1132,10 +1625,60 @@ export default function BlogAdmin() {
               onSave={handleSave}
               onCancel={() => setSheetOpen(false)}
               isSaving={createPost.isPending || updatePost.isPending}
+              availableCategories={allCategories}
+              availableTags={allTags}
             />
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* Reschedule All Confirmation Dialog */}
+      <Dialog
+        open={rescheduleDialogOpen}
+        onOpenChange={setRescheduleDialogOpen}
+      >
+        <DialogContent data-ocid="blog_admin.reschedule.dialog">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <RefreshCw
+                className="w-5 h-5"
+                style={{ color: "oklch(0.35 0.10 240)" }}
+              />
+              Reschedule All Posts?
+            </DialogTitle>
+            <DialogDescription>
+              This will reschedule all published blog posts starting today,
+              publishing one post every 2 days (oldest post first, newest post
+              last). Scheduled posts will be hidden from visitors until their
+              publish date arrives. Continue?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setRescheduleDialogOpen(false)}
+              data-ocid="blog_admin.reschedule.cancel_button"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleRescheduleAll}
+              disabled={rescheduleAll.isPending}
+              data-ocid="blog_admin.reschedule.confirm_button"
+              style={{ background: "oklch(0.35 0.10 240)", color: "white" }}
+            >
+              {rescheduleAll.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />{" "}
+                  Rescheduling...
+                </>
+              ) : (
+                "Yes, Reschedule All"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <Dialog
