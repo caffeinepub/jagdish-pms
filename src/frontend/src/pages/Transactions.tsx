@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { Download, Plus } from "lucide-react";
 import { motion } from "motion/react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -27,6 +27,7 @@ import {
   useGetAllFunds,
   useGetTransactions,
 } from "../hooks/useQueries";
+import { exportToCSV } from "../utils/exportCsv";
 import {
   categoryLabel,
   formatDate,
@@ -82,6 +83,31 @@ export default function Transactions() {
     }
   };
 
+  const handleExport = () => {
+    const headers = [
+      "Date",
+      "Fund",
+      "Category",
+      "Type",
+      "Units",
+      "NAV (₹)",
+      "Amount (₹)",
+    ];
+    const rows = sortedTxs.map((tx) => {
+      const fund = funds?.find((f) => f.id === tx.fundId);
+      return [
+        formatDate(tx.date),
+        fund?.name ?? tx.fundId,
+        categoryLabel(fund?.category ?? ""),
+        transactionLabel(tx.transactionType),
+        (Number(tx.units) / 1000).toFixed(3),
+        (Number(tx.navPerUnit) / 100).toFixed(2),
+        (Number(tx.amount) / 100).toFixed(2),
+      ];
+    });
+    exportToCSV("transactions.csv", headers, rows);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -91,123 +117,140 @@ export default function Transactions() {
             All buy, sell, and SIP transactions
           </p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button
-              data-ocid="transactions.add.open_modal_button"
-              style={{ background: "oklch(0.58 0.19 255)", color: "white" }}
-            >
-              <Plus className="w-4 h-4 mr-1.5" /> Add Transaction
-            </Button>
-          </DialogTrigger>
-          <DialogContent data-ocid="transactions.add.dialog">
-            <DialogHeader>
-              <DialogTitle>Record Transaction</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleAdd} className="space-y-4 mt-2">
-              <div>
-                <Label>Fund</Label>
-                <Select
-                  value={form.fundId}
-                  onValueChange={(v) => setForm({ ...form, fundId: v })}
-                >
-                  <SelectTrigger
-                    data-ocid="transactions.fund.select"
-                    className="mt-1"
-                  >
-                    <SelectValue placeholder="Select fund" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(funds ?? []).map((f) => (
-                      <SelectItem key={f.id} value={f.id}>
-                        {f.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Transaction Type</Label>
-                <Select
-                  value={form.type}
-                  onValueChange={(v) => setForm({ ...form, type: v })}
-                >
-                  <SelectTrigger
-                    data-ocid="transactions.type.select"
-                    className="mt-1"
-                  >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="buy">Buy</SelectItem>
-                    <SelectItem value="sip">SIP</SelectItem>
-                    <SelectItem value="sell">Sell</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            data-ocid="transactions.export.button"
+            onClick={handleExport}
+            disabled={sortedTxs.length === 0}
+          >
+            <Download className="w-4 h-4 mr-1.5" /> Export CSV
+          </Button>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button
+                data-ocid="transactions.add.open_modal_button"
+                style={{ background: "oklch(0.58 0.19 255)", color: "white" }}
+              >
+                <Plus className="w-4 h-4 mr-1.5" /> Add Transaction
+              </Button>
+            </DialogTrigger>
+            <DialogContent data-ocid="transactions.add.dialog">
+              <DialogHeader>
+                <DialogTitle>Record Transaction</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleAdd} className="space-y-4 mt-2">
                 <div>
-                  <Label>Units</Label>
-                  <Input
-                    data-ocid="transactions.units.input"
-                    type="number"
-                    step="0.001"
-                    value={form.units}
-                    onChange={(e) =>
-                      setForm({ ...form, units: e.target.value })
-                    }
-                    placeholder="e.g. 10.500"
-                    className="mt-1"
-                  />
+                  <Label>Fund</Label>
+                  <Select
+                    value={form.fundId}
+                    onValueChange={(v) => setForm({ ...form, fundId: v })}
+                  >
+                    <SelectTrigger
+                      data-ocid="transactions.fund.select"
+                      className="mt-1"
+                    >
+                      <SelectValue placeholder="Select fund" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(funds ?? []).map((f) => (
+                        <SelectItem key={f.id} value={f.id}>
+                          {f.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
-                  <Label>NAV per unit (₹)</Label>
+                  <Label>Transaction Type</Label>
+                  <Select
+                    value={form.type}
+                    onValueChange={(v) => setForm({ ...form, type: v })}
+                  >
+                    <SelectTrigger
+                      data-ocid="transactions.type.select"
+                      className="mt-1"
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="buy">Buy</SelectItem>
+                      <SelectItem value="sip">SIP</SelectItem>
+                      <SelectItem value="sell">Sell</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Units</Label>
+                    <Input
+                      data-ocid="transactions.units.input"
+                      type="number"
+                      step="0.001"
+                      value={form.units}
+                      onChange={(e) =>
+                        setForm({ ...form, units: e.target.value })
+                      }
+                      placeholder="e.g. 10.500"
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label>NAV per unit (₹)</Label>
+                    <Input
+                      data-ocid="transactions.nav.input"
+                      type="number"
+                      step="0.01"
+                      value={form.nav}
+                      onChange={(e) =>
+                        setForm({ ...form, nav: e.target.value })
+                      }
+                      placeholder="e.g. 625.00"
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label>Amount (₹)</Label>
                   <Input
-                    data-ocid="transactions.nav.input"
+                    data-ocid="transactions.amount.input"
                     type="number"
                     step="0.01"
-                    value={form.nav}
-                    onChange={(e) => setForm({ ...form, nav: e.target.value })}
-                    placeholder="e.g. 625.00"
+                    value={form.amount}
+                    onChange={(e) =>
+                      setForm({ ...form, amount: e.target.value })
+                    }
+                    placeholder="e.g. 6562.50"
                     className="mt-1"
                   />
                 </div>
-              </div>
-              <div>
-                <Label>Amount (₹)</Label>
-                <Input
-                  data-ocid="transactions.amount.input"
-                  type="number"
-                  step="0.01"
-                  value={form.amount}
-                  onChange={(e) => setForm({ ...form, amount: e.target.value })}
-                  placeholder="e.g. 6562.50"
-                  className="mt-1"
-                />
-              </div>
-              <div className="flex gap-2 pt-1">
-                <Button
-                  type="button"
-                  variant="outline"
-                  data-ocid="transactions.add.cancel_button"
-                  onClick={() => setOpen(false)}
-                  className="flex-1"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  data-ocid="transactions.add.confirm_button"
-                  disabled={addTransaction.isPending}
-                  className="flex-1"
-                  style={{ background: "oklch(0.58 0.19 255)", color: "white" }}
-                >
-                  {addTransaction.isPending ? "Recording..." : "Record"}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+                <div className="flex gap-2 pt-1">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    data-ocid="transactions.add.cancel_button"
+                    onClick={() => setOpen(false)}
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    data-ocid="transactions.add.confirm_button"
+                    disabled={addTransaction.isPending}
+                    className="flex-1"
+                    style={{
+                      background: "oklch(0.58 0.19 255)",
+                      color: "white",
+                    }}
+                  >
+                    {addTransaction.isPending ? "Recording..." : "Record"}
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <Card className="shadow-card border-0">

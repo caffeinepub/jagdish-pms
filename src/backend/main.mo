@@ -119,6 +119,39 @@ actor {
     status : PostStatus;
   };
 
+  // Admin export types
+  public type UserTransactionRecord = {
+    principal : Text;
+    userName : Text;
+    fundId : Text;
+    transactionType : Text;
+    units : Nat;
+    navPerUnit : Nat;
+    amount : Nat;
+    date : Time.Time;
+  };
+
+  public type UserHoldingRecord = {
+    principal : Text;
+    userName : Text;
+    fundId : Text;
+    units : Nat;
+    avgCostNav : Nat;
+  };
+
+  public type UserRecord = {
+    principal : Text;
+    name : Text;
+  };
+
+  public type UserCapitalGainsRecord = {
+    principal : Text;
+    userName : Text;
+    fundId : Text;
+    stcg : Nat;
+    ltcg : Nat;
+  };
+
   // Custom modules for sorting and comparison
   module Fund {
     public func compare(f1 : Fund, f2 : Fund) : Order.Order {
@@ -161,7 +194,7 @@ actor {
 
   // One-time bootstrap: first logged-in user to call this becomes admin.
   // Once an admin is assigned, this function does nothing.
-  stable var firstAdminBootstrapped : Bool = false;
+  var firstAdminBootstrapped : Bool = false;
 
   public shared ({ caller }) func bootstrapFirstAdmin() : async Bool {
     if (caller.isAnonymous()) {
@@ -463,6 +496,118 @@ actor {
       stcg = totalStcg;
       ltcg = totalLtcg;
     };
+  };
+
+  // ADMIN DATA EXPORT
+
+  // Get all registered users (admin only)
+  public query ({ caller }) func adminGetAllUsers() : async [UserRecord] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can export user data");
+    };
+    userProfiles.entries().toArray().map(
+      func((principal, profile)) {
+        {
+          principal = principal.toText();
+          name = profile.name;
+        };
+      }
+    );
+  };
+
+  // Get all transactions across all users (admin only)
+  public query ({ caller }) func adminGetAllTransactions() : async [UserTransactionRecord] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can export transaction data");
+    };
+    let result = List.empty<UserTransactionRecord>();
+    for ((principal, txList) in userTransactions.entries().toArray().values()) {
+      let userName = switch (userProfiles.get(principal)) {
+        case (null) { "Unknown" };
+        case (?p) { p.name };
+      };
+      let principalText = principal.toText();
+      for (tx in txList.toArray().values()) {
+        let txTypeText = switch (tx.transactionType) {
+          case (#buy) { "buy" };
+          case (#sell) { "sell" };
+          case (#sip) { "sip" };
+        };
+        result.add({
+          principal = principalText;
+          userName;
+          fundId = tx.fundId;
+          transactionType = txTypeText;
+          units = tx.units;
+          navPerUnit = tx.navPerUnit;
+          amount = tx.amount;
+          date = tx.date;
+        });
+      };
+    };
+    result.toArray();
+  };
+
+  // Get all holdings across all users (admin only)
+  public query ({ caller }) func adminGetAllHoldings() : async [UserHoldingRecord] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can export holdings data");
+    };
+    let result = List.empty<UserHoldingRecord>();
+    for ((principal, holdingMap) in userHoldings.entries().toArray().values()) {
+      let userName = switch (userProfiles.get(principal)) {
+        case (null) { "Unknown" };
+        case (?p) { p.name };
+      };
+      let principalText = principal.toText();
+      for (holding in holdingMap.values().toArray().values()) {
+        result.add({
+          principal = principalText;
+          userName;
+          fundId = holding.fundId;
+          units = holding.units;
+          avgCostNav = holding.avgCostNav;
+        });
+      };
+    };
+    result.toArray();
+  };
+
+  // Get capital gains for all users (admin only)
+  public query ({ caller }) func adminGetAllCapitalGains() : async [UserCapitalGainsRecord] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can export capital gains data");
+    };
+    let result = List.empty<UserCapitalGainsRecord>();
+    for ((principal, txList) in userTransactions.entries().toArray().values()) {
+      let userName = switch (userProfiles.get(principal)) {
+        case (null) { "Unknown" };
+        case (?p) { p.name };
+      };
+      let principalText = principal.toText();
+      let allTx = txList.toArray();
+
+      let fundsWithSells = allTx.filter(
+        func(tx) { switch (tx.transactionType) { case (#sell) { true }; case (_) { false } } }
+      );
+      let fundMap = Map.empty<Text, ()>();
+      for (tx in fundsWithSells.values()) {
+        fundMap.add(tx.fundId, ());
+      };
+      let fundIds = fundMap.keys().toArray();
+
+      for (fundId in fundIds.values()) {
+        let gains = calculateGainsForFundInternal(fundId, allTx);
+        result.add({
+          principal = principalText;
+          userName;
+          fundId;
+          stcg = gains.stcg;
+          ltcg = gains.ltcg;
+        });
+      };
+    };
+    result.toArray();
   };
 
   // BLOG POST MANAGEMENT

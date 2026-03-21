@@ -2307,3 +2307,26 @@ BLOG_POSTS.push({
     "Pricing is indicative and subject to change before the official launch. The free Classic tier will always remain free. Follow this blog for the official pricing announcement when each version goes live.",
   ],
 });
+
+BLOG_POSTS.push({
+  id: "127",
+  title:
+    "Introducing the Document Wallet in Jagdish PMS Pro: Store Your Mutual Fund Statements Securely",
+  date: "2026-03-21",
+  author: "Jagdish",
+  readTime: "4 min read",
+  category: "Version Guide",
+  summary:
+    "Starting from the Pro version, Jagdish PMS will include a built-in document wallet — a secure, organised space to store all your mutual fund statements, CAS reports, and financial documents.",
+  content: [
+    "We are pleased to announce that the Pro version of Jagdish PMS will include a Document Wallet — a secure, dedicated space inside the app where you can store and organise all your mutual fund-related documents.",
+    "What is the Document Wallet? The Document Wallet is a Google Drive-like file storage area built directly into your Jagdish PMS account. It is private to you and accessible only after you log in. No third-party cloud storage is involved — your documents are stored securely within the app's infrastructure.",
+    "What can you store? You can upload and store: Mutual fund account statements (PDF or image), CAS (Consolidated Account Statement) files, AMC and broker statements, Folio transaction confirmations, KYC documents related to your investments, Any other financial document you want to keep alongside your portfolio data.",
+    "How documents are organised: You can organise files by year, by AMC or fund house, by document type (statement, confirmation, KYC, etc.), or simply keep them in a flat list with easy search. The wallet is designed to stay clutter-free even if you upload documents over many years.",
+    "Why this is useful: Indian mutual fund investors often struggle to find old statements, especially at tax time. With the Document Wallet, your entire paper trail is in one place — next to your live portfolio data. No more searching email inboxes or digging through folders.",
+    "How the Document Wallet fits into the version roadmap: Classic and Advanced (v1-v2) focus on core tracking and SIP management. Pro (v3) introduces the Document Wallet as the foundation for serious, long-term investors. Elite (v4) will allow you to link a stored CAS document directly to the CAS Import feature — one click from document to imported data. Tax Expert (v7) will expand the wallet to include ITR documents, Form 26AS, capital gains statements, and CA-sharing capabilities.",
+    "Privacy and security: All uploaded documents are private. No one at Jagdish PMS can access your files. Documents are stored encrypted and are not used for any analytics or profiling. You can delete any document at any time.",
+    "When will the Document Wallet be available? The Document Wallet is planned for the Pro version, which is scheduled for Month 3 of the release roadmap. Stay tuned for the official Pro launch announcement on this blog.",
+    "If you are currently on Classic and want to be notified when Pro launches, watch this space. We will publish a dedicated release post when the Pro version goes live with the Document Wallet and all its other features.",
+  ],
+});

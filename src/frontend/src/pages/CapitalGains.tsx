@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Tooltip,
@@ -6,9 +7,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Info } from "lucide-react";
+import { Download, Info } from "lucide-react";
 import { motion } from "motion/react";
 import { useGetAllFunds, useGetCapitalGains } from "../hooks/useQueries";
+import { exportToCSV } from "../utils/exportCsv";
 import { formatINR } from "../utils/format";
 
 const TAX_INFO = [
@@ -46,13 +48,42 @@ export default function CapitalGains() {
   const { data: report, isLoading } = useGetCapitalGains();
   const { data: funds } = useGetAllFunds();
 
+  const handleExport = () => {
+    if (!report || report.details.length === 0) return;
+    const headers = ["Fund", "Category", "STCG (₹)", "LTCG (₹)", "Total (₹)"];
+    const rows = report.details.map((detail) => {
+      const fund = funds?.find((f) => f.id === detail.fundId);
+      const cat = fund?.category ?? "equity";
+      const total = Number(detail.stcg + detail.ltcg);
+      return [
+        fund?.name ?? detail.fundId,
+        cat.charAt(0).toUpperCase() + cat.slice(1),
+        (Number(detail.stcg) / 100).toFixed(2),
+        (Number(detail.ltcg) / 100).toFixed(2),
+        (total / 100).toFixed(2),
+      ];
+    });
+    exportToCSV("capital-gains.csv", headers, rows);
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Capital Gains Report</h1>
-        <p className="text-muted-foreground text-sm mt-0.5">
-          STCG and LTCG summary as per Indian tax rules
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Capital Gains Report</h1>
+          <p className="text-muted-foreground text-sm mt-0.5">
+            STCG and LTCG summary as per Indian tax rules
+          </p>
+        </div>
+        {report && report.details.length > 0 && (
+          <Button
+            variant="outline"
+            data-ocid="capital_gains.export.button"
+            onClick={handleExport}
+          >
+            <Download className="w-4 h-4 mr-1.5" /> Export CSV
+          </Button>
+        )}
       </div>
 
       {/* Tax info cards */}

@@ -270,3 +270,149 @@ export function useDeletePost() {
       }),
   });
 }
+
+// ─── Static Page Hooks ────────────────────────────────────────────────────────
+
+export function useGetPageContent(slug: string) {
+  const { actor, isFetching } = useActor();
+  return useQuery<BlogPost | null>({
+    queryKey: ["page", slug],
+    queryFn: async () => {
+      if (!actor) return null;
+      const all = await actor.getAllPosts();
+      return (
+        all.find((p) => p.category === "Static Page" && p.author === slug) ??
+        null
+      );
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useSavePageContent() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      slug,
+      title,
+      content,
+      existingId,
+    }: {
+      slug: string;
+      title: string;
+      content: string[];
+      existingId?: string;
+    }) => {
+      if (!actor) throw new Error("Actor not available");
+      if (existingId) {
+        await actor.updatePost({
+          id: existingId,
+          title,
+          summary: title,
+          category: "Static Page",
+          author: slug,
+          readTime: "",
+          status: PostStatus.published,
+          content,
+        });
+      } else {
+        await actor.createPost({
+          title,
+          summary: title,
+          category: "Static Page",
+          author: slug,
+          readTime: "",
+          status: PostStatus.published,
+          content,
+        });
+      }
+    },
+    onSuccess: (_d, vars) => {
+      qc.invalidateQueries({ queryKey: ["page", vars.slug] });
+      qc.invalidateQueries({ queryKey: ["allPosts"] });
+    },
+  });
+}
+
+// ── Admin Data Export Hooks ──────────────────────────────────────────────────
+
+export interface UserRecord {
+  principal: string;
+  name: string;
+}
+
+export interface UserTransactionRecord {
+  principal: string;
+  userName: string;
+  fundId: string;
+  transactionType: string;
+  units: bigint;
+  navPerUnit: bigint;
+  amount: bigint;
+  date: bigint;
+}
+
+export interface UserHoldingRecord {
+  principal: string;
+  userName: string;
+  fundId: string;
+  units: bigint;
+  avgCostNav: bigint;
+}
+
+export interface UserCapitalGainsRecord {
+  principal: string;
+  userName: string;
+  fundId: string;
+  stcg: bigint;
+  ltcg: bigint;
+}
+
+export function useAdminGetAllUsers() {
+  const { actor, isFetching } = useActor();
+  return useQuery<UserRecord[]>({
+    queryKey: ["adminGetAllUsers"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return (actor as any).adminGetAllUsers();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useAdminGetAllTransactions() {
+  const { actor, isFetching } = useActor();
+  return useQuery<UserTransactionRecord[]>({
+    queryKey: ["adminGetAllTransactions"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return (actor as any).adminGetAllTransactions();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useAdminGetAllHoldings() {
+  const { actor, isFetching } = useActor();
+  return useQuery<UserHoldingRecord[]>({
+    queryKey: ["adminGetAllHoldings"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return (actor as any).adminGetAllHoldings();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useAdminGetAllCapitalGains() {
+  const { actor, isFetching } = useActor();
+  return useQuery<UserCapitalGainsRecord[]>({
+    queryKey: ["adminGetAllCapitalGains"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return (actor as any).adminGetAllCapitalGains();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}

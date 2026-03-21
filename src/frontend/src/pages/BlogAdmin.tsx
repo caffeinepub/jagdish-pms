@@ -24,7 +24,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import type {
   BlogPost,
@@ -36,6 +36,8 @@ import {
   useCreatePost,
   useDeletePost,
   useGetAllPosts,
+  useGetPageContent,
+  useSavePageContent,
   useUpdatePost,
 } from "@/hooks/useQueries";
 import {
@@ -43,6 +45,8 @@ import {
   Eye,
   EyeOff,
   FileText,
+  Globe,
+  HardDrive,
   Loader2,
   Plus,
   Trash2,
@@ -50,6 +54,7 @@ import {
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { DataExportTab } from "../components/DataExportTab";
 import { BLOG_POSTS } from "../data/blogPosts";
 
 const BLOG_CATEGORIES = [
@@ -359,12 +364,299 @@ function PostForm({
   );
 }
 
+// ─── Page Editor ─────────────────────────────────────────────────────────────
+
+const PAGE_DEFAULTS: Record<string, { title: string; content: string[] }> = {
+  "page-about": {
+    title: "About Us",
+    content: [
+      "Jagdish PMS is a personal project built to simplify mutual fund portfolio tracking for Indian investors. We believe every investor deserves a professional-grade tool without the complexity of spreadsheets or the cost of financial advisors.",
+      "Founded by Jagdish, this project was born out of frustration with existing solutions — maintaining Excel sheets, updating NAVs manually, calculating capital gains at tax time. There had to be a better way.",
+      "Our mission is to empower every Indian mutual fund investor with clear, accurate, and real-time visibility into their portfolio — from a simple SIP to a complex multi-fund, multi-AMC portfolio.",
+    ],
+  },
+  "page-contact": {
+    title: "Contact Us",
+    content: [
+      "We'd love to hear from you. Whether you have a question about the app, found a bug, or have a feature request — reach out and we'll do our best to help.",
+      "We typically respond within 1–2 business days.",
+      "Email: midja85@gmail.com",
+    ],
+  },
+};
+
+function PageEditorSheet({
+  slug,
+  label,
+  open,
+  onOpenChange,
+}: {
+  slug: string;
+  label: string;
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+}) {
+  const { data: existing, isLoading } = useGetPageContent(slug);
+  const savePage = useSavePageContent();
+
+  const defaults = PAGE_DEFAULTS[slug];
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState<string[]>([]);
+  const initialized = useRef(false);
+
+  useEffect(() => {
+    if (!open) {
+      initialized.current = false;
+      return;
+    }
+    if (initialized.current) return;
+    if (isLoading) return;
+    initialized.current = true;
+    if (existing) {
+      setTitle(existing.title);
+      setContent(
+        existing.content.length > 0 ? existing.content : defaults.content,
+      );
+    } else {
+      setTitle(defaults.title);
+      setContent([...defaults.content]);
+    }
+  }, [open, isLoading, existing, defaults]);
+
+  const updateParagraph = (i: number, val: string) => {
+    setContent((prev) => {
+      const next = [...prev];
+      next[i] = val;
+      return next;
+    });
+  };
+
+  const addParagraph = () => setContent((prev) => [...prev, ""]);
+
+  const removeParagraph = (i: number) => {
+    if (content.length <= 1) return;
+    setContent((prev) => prev.filter((_, idx) => idx !== i));
+  };
+
+  const handleSave = async () => {
+    if (!title.trim()) {
+      toast.error("Title is required");
+      return;
+    }
+    try {
+      await savePage.mutateAsync({
+        slug,
+        title,
+        content: content.filter((p) => p.trim() !== ""),
+        existingId: existing?.id,
+      });
+      toast.success(`${label} page saved`);
+      onOpenChange(false);
+    } catch {
+      toast.error("Failed to save page");
+    }
+  };
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent
+        side="right"
+        className="w-full sm:max-w-xl flex flex-col p-6"
+        data-ocid="pages_admin.editor.sheet"
+      >
+        <SheetHeader className="shrink-0 mb-4">
+          <SheetTitle>Edit: {label}</SheetTitle>
+          <SheetDescription>
+            Update the content for the {label} public page.
+          </SheetDescription>
+        </SheetHeader>
+
+        {isLoading ? (
+          <div
+            className="flex items-center justify-center flex-1 gap-2 text-sm text-muted-foreground"
+            data-ocid="pages_admin.loading_state"
+          >
+            <Loader2 className="w-4 h-4 animate-spin" /> Loading...
+          </div>
+        ) : (
+          <div className="flex flex-col flex-1 gap-5 overflow-hidden">
+            <div className="flex-1 overflow-y-auto pr-1 space-y-5">
+              {/* Title */}
+              <div className="space-y-1.5">
+                <Label className="text-sm font-medium">
+                  Page Title <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  data-ocid="pages_admin.title.input"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Page title"
+                  className="text-sm"
+                />
+              </div>
+
+              {/* Content Paragraphs */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">
+                    Content Paragraphs
+                  </Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addParagraph}
+                    data-ocid="pages_admin.add_paragraph.button"
+                    className="text-xs h-7"
+                  >
+                    <Plus className="w-3 h-3 mr-1" /> Add Paragraph
+                  </Button>
+                </div>
+                <div className="space-y-3">
+                  {content.map((para, i) => (
+                    // biome-ignore lint/suspicious/noArrayIndexKey: paragraph order is meaningful
+                    <div key={i} className="relative group">
+                      <Textarea
+                        value={para}
+                        onChange={(e) => updateParagraph(i, e.target.value)}
+                        placeholder={`Paragraph ${i + 1}...`}
+                        rows={4}
+                        className="text-sm resize-none pr-8"
+                        data-ocid={`pages_admin.paragraph.input.${i + 1}`}
+                      />
+                      {content.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeParagraph(i)}
+                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity w-5 h-5 rounded flex items-center justify-center text-muted-foreground hover:text-destructive"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-2 pt-2 border-t border-border shrink-0">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                data-ocid="pages_admin.cancel.button"
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={handleSave}
+                disabled={savePage.isPending}
+                data-ocid="pages_admin.save.button"
+                className="flex-1"
+                style={{ background: "oklch(0.35 0.10 240)", color: "white" }}
+              >
+                {savePage.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...
+                  </>
+                ) : (
+                  "Save Page"
+                )}
+              </Button>
+            </div>
+          </div>
+        )}
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+const STATIC_PAGES = [
+  { slug: "page-about", label: "About Us" },
+  { slug: "page-contact", label: "Contact Us" },
+];
+
+function PagesTab() {
+  const [editingSlug, setEditingSlug] = useState<string | null>(null);
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">
+        Edit the content for your public static pages. Changes are published
+        immediately.
+      </p>
+
+      <div className="grid gap-3">
+        {STATIC_PAGES.map((pg) => (
+          <div
+            key={pg.slug}
+            className="flex items-center justify-between rounded-xl border border-border p-4"
+            style={{ background: "oklch(0.99 0.004 220)" }}
+            data-ocid={`pages_admin.${pg.slug}.card`}
+          >
+            <div className="flex items-center gap-3">
+              <div
+                className="w-9 h-9 rounded-lg flex items-center justify-center"
+                style={{ background: "oklch(0.35 0.10 240 / 0.10)" }}
+              >
+                <Globe
+                  className="w-4 h-4"
+                  style={{ color: "oklch(0.35 0.10 240)" }}
+                />
+              </div>
+              <div>
+                <p
+                  className="font-medium text-sm"
+                  style={{ color: "oklch(0.20 0.065 240)" }}
+                >
+                  {pg.label}
+                </p>
+                <p className="text-xs text-muted-foreground">Public page</p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setEditingSlug(pg.slug)}
+              data-ocid={`pages_admin.${pg.slug}.edit_button`}
+              className="gap-1.5 text-xs"
+            >
+              <Edit2 className="w-3.5 h-3.5" />
+              Edit
+            </Button>
+          </div>
+        ))}
+      </div>
+
+      {STATIC_PAGES.map((pg) => (
+        <PageEditorSheet
+          key={pg.slug}
+          slug={pg.slug}
+          label={pg.label}
+          open={editingSlug === pg.slug}
+          onOpenChange={(v) => {
+            if (!v) setEditingSlug(null);
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+// ─── Main BlogAdmin Component ─────────────────────────────────────────────────
+
 export default function BlogAdmin() {
   const { data: posts = [], isLoading, isFetched } = useGetAllPosts();
   const createPost = useCreatePost();
   const updatePost = useUpdatePost();
   const deletePost = useDeletePost();
 
+  const [adminTab, setAdminTab] = useState<"posts" | "pages" | "data-export">(
+    "posts",
+  );
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
@@ -401,7 +693,10 @@ export default function BlogAdmin() {
     seed();
   }, [isFetched, posts.length, createPost.mutateAsync]);
 
-  const filteredPosts = posts.filter((p) => {
+  // Filter out static pages from blog post list
+  const blogPosts = posts.filter((p) => p.category !== "Static Page");
+
+  const filteredPosts = blogPosts.filter((p) => {
     if (statusFilter === "all") return true;
     if (statusFilter === "published") return p.status === PostStatus.published;
     if (statusFilter === "draft") return p.status === PostStatus.draft;
@@ -411,10 +706,11 @@ export default function BlogAdmin() {
   });
 
   const counts = {
-    all: posts.length,
-    published: posts.filter((p) => p.status === PostStatus.published).length,
-    draft: posts.filter((p) => p.status === PostStatus.draft).length,
-    private: posts.filter((p) => p.status === PostStatus.privateVisibility)
+    all: blogPosts.length,
+    published: blogPosts.filter((p) => p.status === PostStatus.published)
+      .length,
+    draft: blogPosts.filter((p) => p.status === PostStatus.draft).length,
+    private: blogPosts.filter((p) => p.status === PostStatus.privateVisibility)
       .length,
   };
 
@@ -517,262 +813,301 @@ export default function BlogAdmin() {
             className="text-2xl font-bold tracking-tight"
             style={{ color: "oklch(0.18 0.065 240)" }}
           >
-            Blog Posts
+            Admin Panel
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Create, edit, and manage blog content
+            Manage blog posts and static pages
           </p>
         </div>
-        <Button
-          onClick={openNew}
-          data-ocid="blog_admin.new_post.button"
-          className="gap-2"
-          style={{ background: "oklch(0.35 0.10 240)", color: "white" }}
-        >
-          <Plus className="w-4 h-4" />
-          New Post
-        </Button>
+        {adminTab === "posts" && (
+          <Button
+            onClick={openNew}
+            data-ocid="blog_admin.new_post.button"
+            className="gap-2"
+            style={{ background: "oklch(0.35 0.10 240)", color: "white" }}
+          >
+            <Plus className="w-4 h-4" />
+            New Post
+          </Button>
+        )}
       </motion.div>
 
-      {/* Stats + Filter Tabs */}
+      {/* Top-level tab: Blog Posts vs Pages */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.05 }}
+        transition={{ duration: 0.3, delay: 0.04 }}
       >
         <Tabs
-          value={statusFilter}
-          onValueChange={(v) => setStatusFilter(v as StatusFilter)}
+          value={adminTab}
+          onValueChange={(v) =>
+            setAdminTab(v as "posts" | "pages" | "data-export")
+          }
         >
-          <TabsList className="h-9" data-ocid="blog_admin.filter.tab">
-            <TabsTrigger value="all" className="text-xs px-4">
-              All{" "}
-              <span className="ml-1.5 text-muted-foreground">
-                ({counts.all})
-              </span>
+          <TabsList className="h-9 mb-6" data-ocid="blog_admin.section.tab">
+            <TabsTrigger value="posts" className="text-xs px-5 gap-1.5">
+              <FileText className="w-3.5 h-3.5" />
+              Blog Posts
             </TabsTrigger>
-            <TabsTrigger value="published" className="text-xs px-4">
-              Published{" "}
-              <span className="ml-1.5 text-muted-foreground">
-                ({counts.published})
-              </span>
+            <TabsTrigger value="pages" className="text-xs px-5 gap-1.5">
+              <Globe className="w-3.5 h-3.5" />
+              Pages
             </TabsTrigger>
-            <TabsTrigger value="draft" className="text-xs px-4">
-              Drafts{" "}
-              <span className="ml-1.5 text-muted-foreground">
-                ({counts.draft})
-              </span>
-            </TabsTrigger>
-            <TabsTrigger value="private" className="text-xs px-4">
-              Private{" "}
-              <span className="ml-1.5 text-muted-foreground">
-                ({counts.private})
-              </span>
+            <TabsTrigger value="data-export" className="text-xs px-5 gap-1.5">
+              <HardDrive className="w-3.5 h-3.5" />
+              Data Export
             </TabsTrigger>
           </TabsList>
-        </Tabs>
-      </motion.div>
 
-      {/* Posts Table */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.1 }}
-        className="rounded-xl border border-border overflow-hidden"
-        style={{ background: "oklch(0.99 0.004 220)" }}
-      >
-        {isSeeding ? (
-          <div
-            className="flex flex-col items-center justify-center py-16 text-center gap-3"
-            data-ocid="blog_admin.loading_state"
-          >
-            <Loader2
-              className="w-6 h-6 animate-spin"
-              style={{ color: "oklch(0.35 0.10 240)" }}
-            />
-            <p
-              className="text-sm font-semibold"
-              style={{ color: "oklch(0.35 0.10 240)" }}
+          {/* ── Blog Posts Tab ── */}
+          <TabsContent value="posts" className="space-y-4 mt-0">
+            {/* Status filter sub-tabs */}
+            <Tabs
+              value={statusFilter}
+              onValueChange={(v) => setStatusFilter(v as StatusFilter)}
             >
-              Importing blog posts...
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {seedProgress} / {BLOG_POSTS.length} posts imported
-            </p>
-            <div className="w-64 bg-gray-100 rounded-full h-2 overflow-hidden">
-              <div
-                className="h-2 rounded-full transition-all duration-300"
-                style={{
-                  width: `${Math.round((seedProgress / BLOG_POSTS.length) * 100)}%`,
-                  background: "oklch(0.35 0.10 240)",
-                }}
-              />
-            </div>
-          </div>
-        ) : isLoading ? (
-          <div
-            className="flex items-center justify-center py-16 text-muted-foreground text-sm gap-2"
-            data-ocid="blog_admin.loading_state"
-          >
-            <Loader2 className="w-4 h-4 animate-spin" />
-            Loading posts...
-          </div>
-        ) : filteredPosts.length === 0 ? (
-          <div
-            className="flex flex-col items-center justify-center py-16 text-center"
-            data-ocid="blog_admin.empty_state"
-          >
-            <FileText
-              className="w-10 h-10 mb-3"
-              style={{ color: "oklch(0.75 0.01 220)" }}
-            />
-            <p className="text-sm font-medium text-muted-foreground">
-              No posts found
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              {statusFilter === "all"
-                ? "Create your first post using the New Post button."
-                : `No ${statusFilter} posts yet.`}
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr
-                  style={{
-                    background: "oklch(0.955 0.01 220)",
-                    borderBottom: "1px solid oklch(0.90 0.01 220)",
-                  }}
+              <TabsList className="h-9" data-ocid="blog_admin.filter.tab">
+                <TabsTrigger value="all" className="text-xs px-4">
+                  All{" "}
+                  <span className="ml-1.5 text-muted-foreground">
+                    ({counts.all})
+                  </span>
+                </TabsTrigger>
+                <TabsTrigger value="published" className="text-xs px-4">
+                  Published{" "}
+                  <span className="ml-1.5 text-muted-foreground">
+                    ({counts.published})
+                  </span>
+                </TabsTrigger>
+                <TabsTrigger value="draft" className="text-xs px-4">
+                  Drafts{" "}
+                  <span className="ml-1.5 text-muted-foreground">
+                    ({counts.draft})
+                  </span>
+                </TabsTrigger>
+                <TabsTrigger value="private" className="text-xs px-4">
+                  Private{" "}
+                  <span className="ml-1.5 text-muted-foreground">
+                    ({counts.private})
+                  </span>
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+
+            {/* Posts Table */}
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.1 }}
+              className="rounded-xl border border-border overflow-hidden"
+              style={{ background: "oklch(0.99 0.004 220)" }}
+            >
+              {isSeeding ? (
+                <div
+                  className="flex flex-col items-center justify-center py-16 text-center gap-3"
+                  data-ocid="blog_admin.loading_state"
                 >
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                    Title
-                  </th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden md:table-cell">
-                    Category
-                  </th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                    Status
-                  </th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden lg:table-cell">
-                    Author
-                  </th>
-                  <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <AnimatePresence>
-                  {filteredPosts.map((post, idx) => (
-                    <motion.tr
-                      key={post.id}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.15, delay: idx * 0.02 }}
-                      data-ocid={`blog_admin.post.item.${idx + 1}`}
-                      className="border-b border-border/50 hover:bg-accent/40 transition-colors"
-                    >
-                      <td className="px-4 py-3">
-                        <p
-                          className="font-medium text-sm line-clamp-1 max-w-xs"
-                          style={{ color: "oklch(0.22 0.05 240)" }}
-                          title={post.title}
-                        >
-                          {post.title}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1 max-w-xs">
-                          {post.summary}
-                        </p>
-                      </td>
-                      <td className="px-4 py-3 hidden md:table-cell">
-                        <span className="text-xs text-muted-foreground">
-                          {post.category}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <StatusBadge status={post.status} />
-                      </td>
-                      <td className="px-4 py-3 hidden lg:table-cell">
-                        <span className="text-xs text-muted-foreground">
-                          {post.author}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center justify-end gap-1">
-                          {/* Quick status buttons */}
-                          {post.status !== PostStatus.published && (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleQuickStatus(post, PostStatus.published)
-                              }
-                              className="p-1.5 rounded-md hover:bg-green-50 text-muted-foreground hover:text-green-700 transition-colors"
-                              title="Publish"
-                              data-ocid={`blog_admin.publish.button.${idx + 1}`}
-                            >
-                              <Eye className="w-3.5 h-3.5" />
-                            </button>
-                          )}
-                          {post.status !== PostStatus.draft && (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleQuickStatus(post, PostStatus.draft)
-                              }
-                              className="p-1.5 rounded-md hover:bg-yellow-50 text-muted-foreground hover:text-yellow-700 transition-colors"
-                              title="Move to Draft"
-                              data-ocid={`blog_admin.draft.button.${idx + 1}`}
-                            >
-                              <FileText className="w-3.5 h-3.5" />
-                            </button>
-                          )}
-                          {post.status !== PostStatus.privateVisibility && (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleQuickStatus(
-                                  post,
-                                  PostStatus.privateVisibility,
-                                )
-                              }
-                              className="p-1.5 rounded-md hover:bg-gray-100 text-muted-foreground hover:text-gray-700 transition-colors"
-                              title="Make Private"
-                              data-ocid={`blog_admin.private.button.${idx + 1}`}
-                            >
-                              <EyeOff className="w-3.5 h-3.5" />
-                            </button>
-                          )}
-                          {/* Edit */}
-                          <button
-                            type="button"
-                            onClick={() => openEdit(post)}
-                            className="p-1.5 rounded-md hover:bg-blue-50 text-muted-foreground hover:text-blue-700 transition-colors"
-                            title="Edit"
-                            data-ocid={`blog_admin.edit.button.${idx + 1}`}
+                  <Loader2
+                    className="w-6 h-6 animate-spin"
+                    style={{ color: "oklch(0.35 0.10 240)" }}
+                  />
+                  <p
+                    className="text-sm font-semibold"
+                    style={{ color: "oklch(0.35 0.10 240)" }}
+                  >
+                    Importing blog posts...
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {seedProgress} / {BLOG_POSTS.length} posts imported
+                  </p>
+                  <div className="w-64 bg-gray-100 rounded-full h-2 overflow-hidden">
+                    <div
+                      className="h-2 rounded-full transition-all duration-300"
+                      style={{
+                        width: `${Math.round((seedProgress / BLOG_POSTS.length) * 100)}%`,
+                        background: "oklch(0.35 0.10 240)",
+                      }}
+                    />
+                  </div>
+                </div>
+              ) : isLoading ? (
+                <div
+                  className="flex items-center justify-center py-16 text-muted-foreground text-sm gap-2"
+                  data-ocid="blog_admin.loading_state"
+                >
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Loading posts...
+                </div>
+              ) : filteredPosts.length === 0 ? (
+                <div
+                  className="flex flex-col items-center justify-center py-16 text-center"
+                  data-ocid="blog_admin.empty_state"
+                >
+                  <FileText
+                    className="w-10 h-10 mb-3"
+                    style={{ color: "oklch(0.75 0.01 220)" }}
+                  />
+                  <p className="text-sm font-medium text-muted-foreground">
+                    No posts found
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {statusFilter === "all"
+                      ? "Create your first post using the New Post button."
+                      : `No ${statusFilter} posts yet.`}
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr
+                        style={{
+                          background: "oklch(0.955 0.01 220)",
+                          borderBottom: "1px solid oklch(0.90 0.01 220)",
+                        }}
+                      >
+                        <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                          Title
+                        </th>
+                        <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden md:table-cell">
+                          Category
+                        </th>
+                        <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                          Status
+                        </th>
+                        <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden lg:table-cell">
+                          Author
+                        </th>
+                        <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <AnimatePresence>
+                        {filteredPosts.map((post, idx) => (
+                          <motion.tr
+                            key={post.id}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.15, delay: idx * 0.02 }}
+                            data-ocid={`blog_admin.post.item.${idx + 1}`}
+                            className="border-b border-border/50 hover:bg-accent/40 transition-colors"
                           >
-                            <Edit2 className="w-3.5 h-3.5" />
-                          </button>
-                          {/* Delete */}
-                          <button
-                            type="button"
-                            onClick={() => setDeleteTarget(post)}
-                            className="p-1.5 rounded-md hover:bg-red-50 text-muted-foreground hover:text-red-600 transition-colors"
-                            title="Delete"
-                            data-ocid={`blog_admin.delete.button.${idx + 1}`}
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </td>
-                    </motion.tr>
-                  ))}
-                </AnimatePresence>
-              </tbody>
-            </table>
-          </div>
-        )}
+                            <td className="px-4 py-3">
+                              <p
+                                className="font-medium text-sm line-clamp-1 max-w-xs"
+                                style={{ color: "oklch(0.22 0.05 240)" }}
+                                title={post.title}
+                              >
+                                {post.title}
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1 max-w-xs">
+                                {post.summary}
+                              </p>
+                            </td>
+                            <td className="px-4 py-3 hidden md:table-cell">
+                              <span className="text-xs text-muted-foreground">
+                                {post.category}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <StatusBadge status={post.status} />
+                            </td>
+                            <td className="px-4 py-3 hidden lg:table-cell">
+                              <span className="text-xs text-muted-foreground">
+                                {post.author}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center justify-end gap-1">
+                                {post.status !== PostStatus.published && (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleQuickStatus(
+                                        post,
+                                        PostStatus.published,
+                                      )
+                                    }
+                                    className="p-1.5 rounded-md hover:bg-green-50 text-muted-foreground hover:text-green-700 transition-colors"
+                                    title="Publish"
+                                    data-ocid={`blog_admin.publish.button.${idx + 1}`}
+                                  >
+                                    <Eye className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+                                {post.status !== PostStatus.draft && (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleQuickStatus(post, PostStatus.draft)
+                                    }
+                                    className="p-1.5 rounded-md hover:bg-yellow-50 text-muted-foreground hover:text-yellow-700 transition-colors"
+                                    title="Move to Draft"
+                                    data-ocid={`blog_admin.draft.button.${idx + 1}`}
+                                  >
+                                    <FileText className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+                                {post.status !==
+                                  PostStatus.privateVisibility && (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleQuickStatus(
+                                        post,
+                                        PostStatus.privateVisibility,
+                                      )
+                                    }
+                                    className="p-1.5 rounded-md hover:bg-gray-100 text-muted-foreground hover:text-gray-700 transition-colors"
+                                    title="Make Private"
+                                    data-ocid={`blog_admin.private.button.${idx + 1}`}
+                                  >
+                                    <EyeOff className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => openEdit(post)}
+                                  className="p-1.5 rounded-md hover:bg-blue-50 text-muted-foreground hover:text-blue-700 transition-colors"
+                                  title="Edit"
+                                  data-ocid={`blog_admin.edit.button.${idx + 1}`}
+                                >
+                                  <Edit2 className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setDeleteTarget(post)}
+                                  className="p-1.5 rounded-md hover:bg-red-50 text-muted-foreground hover:text-red-600 transition-colors"
+                                  title="Delete"
+                                  data-ocid={`blog_admin.delete.button.${idx + 1}`}
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </td>
+                          </motion.tr>
+                        ))}
+                      </AnimatePresence>
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </motion.div>
+          </TabsContent>
+
+          {/* ── Pages Tab ── */}
+          <TabsContent value="pages" className="mt-0">
+            <PagesTab />
+          </TabsContent>
+
+          {/* ── Data Export Tab ── */}
+          <TabsContent value="data-export" className="mt-0">
+            <DataExportTab />
+          </TabsContent>
+        </Tabs>
       </motion.div>
 
       {/* Create / Edit Sheet */}

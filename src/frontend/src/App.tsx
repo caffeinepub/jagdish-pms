@@ -34,11 +34,14 @@ import Holdings from "./pages/Holdings";
 import NavUpdate from "./pages/NavUpdate";
 import Settings from "./pages/Settings";
 import Transactions from "./pages/Transactions";
+import AboutUsPage from "./pages/public/AboutUsPage";
 import ApplicationPage from "./pages/public/ApplicationPage";
 import BlogPage from "./pages/public/BlogPage";
 import ComingSoonPage from "./pages/public/ComingSoonPage";
+import ContactUsPage from "./pages/public/ContactUsPage";
 import DisclaimerPage from "./pages/public/DisclaimerPage";
 import HomePage from "./pages/public/HomePage";
+import PricingPage from "./pages/public/PricingPage";
 import PrivacyPolicyPage from "./pages/public/PrivacyPolicyPage";
 
 const queryClient = new QueryClient();
@@ -470,20 +473,12 @@ function PublicWebsite({ onLaunchApp }: { onLaunchApp: () => void }) {
         return <ApplicationPage onLaunchApp={onLaunchApp} />;
       case "blog":
         return <BlogPage />;
+      case "pricing":
+        return <PricingPage />;
       case "about":
-        return (
-          <ComingSoonPage
-            title="About Us"
-            description="Learn about the team behind Jagdish PMS and our mission to simplify mutual fund investing."
-          />
-        );
+        return <AboutUsPage />;
       case "contact":
-        return (
-          <ComingSoonPage
-            title="Contact Us"
-            description="Have questions or feedback? We'd love to hear from you. Contact details coming soon."
-          />
-        );
+        return <ContactUsPage />;
       case "disclaimer":
         return <DisclaimerPage />;
       case "privacy":

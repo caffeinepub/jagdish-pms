@@ -7,6 +7,7 @@ type PublicPage =
   | "home"
   | "application"
   | "blog"
+  | "pricing"
   | "about"
   | "contact"
   | "disclaimer"
@@ -16,6 +17,7 @@ const NAV_LINKS: { id: PublicPage; label: string }[] = [
   { id: "home", label: "Home" },
   { id: "application", label: "Application" },
   { id: "blog", label: "Blog" },
+  { id: "pricing", label: "Pricing" },
   { id: "about", label: "About Us" },
   { id: "contact", label: "Contact Us" },
   { id: "disclaimer", label: "Disclaimer" },
@@ -211,11 +213,19 @@ export default function PublicLayout({
                 Quick Links
               </h4>
               <div className="space-y-2">
-                {["home", "application", "blog", "about"].map((id) => (
+                {(
+                  [
+                    "home",
+                    "application",
+                    "blog",
+                    "pricing",
+                    "about",
+                  ] as PublicPage[]
+                ).map((id) => (
                   <button
                     key={id}
                     type="button"
-                    onClick={() => onNavigate(id as PublicPage)}
+                    onClick={() => onNavigate(id)}
                     className="block text-sm capitalize transition-colors hover:text-white"
                     style={{ color: "oklch(0.62 0.018 220)" }}
                   >
@@ -235,19 +245,21 @@ export default function PublicLayout({
                 Legal
               </h4>
               <div className="space-y-2">
-                {["disclaimer", "privacy", "contact"].map((id) => (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() => onNavigate(id as PublicPage)}
-                    className="block text-sm capitalize transition-colors hover:text-white"
-                    style={{ color: "oklch(0.62 0.018 220)" }}
-                  >
-                    {id === "privacy"
-                      ? "Privacy Policy"
-                      : id.charAt(0).toUpperCase() + id.slice(1)}
-                  </button>
-                ))}
+                {(["disclaimer", "privacy", "contact"] as PublicPage[]).map(
+                  (id) => (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => onNavigate(id)}
+                      className="block text-sm capitalize transition-colors hover:text-white"
+                      style={{ color: "oklch(0.62 0.018 220)" }}
+                    >
+                      {id === "privacy"
+                        ? "Privacy Policy"
+                        : id.charAt(0).toUpperCase() + id.slice(1)}
+                    </button>
+                  ),
+                )}
               </div>
             </div>
           </div>

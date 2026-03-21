@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Search } from "lucide-react";
+import { Download, Plus, Search } from "lucide-react";
 import { motion } from "motion/react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -28,6 +28,7 @@ import {
   useGetHoldings,
   useGetPortfolioSummary,
 } from "../hooks/useQueries";
+import { exportToCSV } from "../utils/exportCsv";
 import {
   calcGainPercent,
   categoryLabel,
@@ -89,6 +90,37 @@ export default function Holdings() {
     }
   };
 
+  const handleExport = () => {
+    const headers = [
+      "Fund Name",
+      "Category",
+      "Units",
+      "Avg Cost NAV (₹)",
+      "Current NAV (₹)",
+      "Invested (₹)",
+      "Current Value (₹)",
+      "Gain/Loss (₹)",
+      "Return %",
+    ];
+    const rows = holdingsWithData.map((h) => {
+      const gp = h.summaryH
+        ? calcGainPercent(h.summaryH.amountInvested, h.summaryH.currentValue)
+        : 0;
+      return [
+        h.fund?.name ?? h.fundId,
+        categoryLabel(h.fund?.category ?? ""),
+        (Number(h.units) / 1000).toFixed(3),
+        (Number(h.avgCostNav) / 100).toFixed(2),
+        h.fund ? (Number(h.fund.currentNav) / 100).toFixed(2) : "-",
+        h.summaryH ? (Number(h.summaryH.amountInvested) / 100).toFixed(2) : "-",
+        h.summaryH ? (Number(h.summaryH.currentValue) / 100).toFixed(2) : "-",
+        h.summaryH ? (Number(h.summaryH.gainLoss) / 100).toFixed(2) : "-",
+        `${gp.toFixed(2)}%`,
+      ];
+    });
+    exportToCSV("holdings.csv", headers, rows);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -98,97 +130,110 @@ export default function Holdings() {
             Your mutual fund portfolio positions
           </p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button
-              data-ocid="holdings.add_fund.open_modal_button"
-              style={{ background: "oklch(0.58 0.19 255)", color: "white" }}
-            >
-              <Plus className="w-4 h-4 mr-1.5" /> Add Fund
-            </Button>
-          </DialogTrigger>
-          <DialogContent data-ocid="holdings.add_fund.dialog">
-            <DialogHeader>
-              <DialogTitle>Add New Fund</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleAddFund} className="space-y-4 mt-2">
-              <div>
-                <Label>Fund ID (unique slug)</Label>
-                <Input
-                  data-ocid="holdings.fund_id.input"
-                  value={form.id}
-                  onChange={(e) => setForm({ ...form, id: e.target.value })}
-                  placeholder="e.g. hdfc-equity"
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label>Fund Name</Label>
-                <Input
-                  data-ocid="holdings.fund_name.input"
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="e.g. HDFC Equity Fund"
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label>Category</Label>
-                <Select
-                  value={form.category}
-                  onValueChange={(v) => setForm({ ...form, category: v })}
-                >
-                  <SelectTrigger
-                    data-ocid="holdings.category.select"
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            data-ocid="holdings.export.button"
+            onClick={handleExport}
+            disabled={holdingsWithData.length === 0}
+          >
+            <Download className="w-4 h-4 mr-1.5" /> Export CSV
+          </Button>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button
+                data-ocid="holdings.add_fund.open_modal_button"
+                style={{ background: "oklch(0.58 0.19 255)", color: "white" }}
+              >
+                <Plus className="w-4 h-4 mr-1.5" /> Add Fund
+              </Button>
+            </DialogTrigger>
+            <DialogContent data-ocid="holdings.add_fund.dialog">
+              <DialogHeader>
+                <DialogTitle>Add New Fund</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleAddFund} className="space-y-4 mt-2">
+                <div>
+                  <Label>Fund ID (unique slug)</Label>
+                  <Input
+                    data-ocid="holdings.fund_id.input"
+                    value={form.id}
+                    onChange={(e) => setForm({ ...form, id: e.target.value })}
+                    placeholder="e.g. hdfc-equity"
                     className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label>Fund Name</Label>
+                  <Input
+                    data-ocid="holdings.fund_name.input"
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    placeholder="e.g. HDFC Equity Fund"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label>Category</Label>
+                  <Select
+                    value={form.category}
+                    onValueChange={(v) => setForm({ ...form, category: v })}
                   >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="equity">Equity</SelectItem>
-                    <SelectItem value="debt">Debt</SelectItem>
-                    <SelectItem value="hybrid">Hybrid</SelectItem>
-                    <SelectItem value="elss">ELSS</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Initial NAV (₹)</Label>
-                <Input
-                  data-ocid="holdings.nav.input"
-                  type="number"
-                  step="0.01"
-                  value={form.initialNav}
-                  onChange={(e) =>
-                    setForm({ ...form, initialNav: e.target.value })
-                  }
-                  placeholder="e.g. 625.00"
-                  className="mt-1"
-                />
-              </div>
-              <div className="flex gap-2 pt-1">
-                <Button
-                  type="button"
-                  variant="outline"
-                  data-ocid="holdings.add_fund.cancel_button"
-                  onClick={() => setOpen(false)}
-                  className="flex-1"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  data-ocid="holdings.add_fund.confirm_button"
-                  disabled={addFund.isPending}
-                  className="flex-1"
-                  style={{ background: "oklch(0.58 0.19 255)", color: "white" }}
-                >
-                  {addFund.isPending ? "Adding..." : "Add Fund"}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+                    <SelectTrigger
+                      data-ocid="holdings.category.select"
+                      className="mt-1"
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="equity">Equity</SelectItem>
+                      <SelectItem value="debt">Debt</SelectItem>
+                      <SelectItem value="hybrid">Hybrid</SelectItem>
+                      <SelectItem value="elss">ELSS</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Initial NAV (₹)</Label>
+                  <Input
+                    data-ocid="holdings.nav.input"
+                    type="number"
+                    step="0.01"
+                    value={form.initialNav}
+                    onChange={(e) =>
+                      setForm({ ...form, initialNav: e.target.value })
+                    }
+                    placeholder="e.g. 625.00"
+                    className="mt-1"
+                  />
+                </div>
+                <div className="flex gap-2 pt-1">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    data-ocid="holdings.add_fund.cancel_button"
+                    onClick={() => setOpen(false)}
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    data-ocid="holdings.add_fund.confirm_button"
+                    disabled={addFund.isPending}
+                    className="flex-1"
+                    style={{
+                      background: "oklch(0.58 0.19 255)",
+                      color: "white",
+                    }}
+                  >
+                    {addFund.isPending ? "Adding..." : "Add Fund"}
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <Card className="shadow-card border-0">
