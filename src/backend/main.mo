@@ -5,15 +5,15 @@ import Order "mo:core/Order";
 import Runtime "mo:core/Runtime";
 import Time "mo:core/Time";
 import Text "mo:core/Text";
-import Nat "mo:core/Nat";
 import List "mo:core/List";
+import Nat "mo:core/Nat";
 import Int "mo:core/Int";
 import Principal "mo:core/Principal";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
+import Migration "migration";
 
-
-
+(with migration = Migration.run)
 actor {
   // Types
   public type FundCategory = {
@@ -37,6 +37,25 @@ actor {
     #sip;
   };
 
+  public type TransactionInput = {
+    fundId : Text;
+    transactionType : TransactionType;
+    units : Nat;
+    navPerUnit : Nat; // in paise
+    amount : Nat;
+    txnDate : ?Nat;
+    amc : ?Text;
+    folioNumber : ?Text;
+    agentCode : ?Text;
+    agentName : ?Text;
+    subAgentCode : ?Text;
+    subAgentName : ?Text;
+    bankAccount : ?Text;
+    paymentMode : ?Text;
+    isin : ?Text;
+    remarks : ?Text;
+  };
+
   public type Transaction = {
     fundId : Text;
     transactionType : TransactionType;
@@ -44,6 +63,17 @@ actor {
     navPerUnit : Nat; // in paise
     amount : Nat; // in paise
     date : Time.Time;
+    txnDate : ?Nat;
+    amc : ?Text;
+    folioNumber : ?Text;
+    agentCode : ?Text;
+    agentName : ?Text;
+    subAgentCode : ?Text;
+    subAgentName : ?Text;
+    bankAccount : ?Text;
+    paymentMode : ?Text;
+    isin : ?Text;
+    remarks : ?Text;
   };
 
   public type Holding = {
@@ -80,7 +110,10 @@ actor {
   };
 
   public type UserProfile = {
+    gmail : Text;
     name : Text;
+    registeredAt : Int;
+    lastSeen : Int;
   };
 
   public type BlogPost = {
@@ -135,6 +168,17 @@ actor {
     navPerUnit : Nat;
     amount : Nat;
     date : Time.Time;
+    txnDate : ?Nat;
+    amc : ?Text;
+    folioNumber : ?Text;
+    agentCode : ?Text;
+    agentName : ?Text;
+    subAgentCode : ?Text;
+    subAgentName : ?Text;
+    bankAccount : ?Text;
+    paymentMode : ?Text;
+    isin : ?Text;
+    remarks : ?Text;
   };
 
   public type UserHoldingRecord = {
@@ -147,7 +191,19 @@ actor {
 
   public type UserRecord = {
     principal : Text;
+    gmail : Text;
     name : Text;
+    registeredAt : Int;
+    lastSeen : Int;
+  };
+
+  public type UserSummary = {
+    principal : Text;
+    gmail : Text;
+    registeredAt : Int;
+    lastSeen : Int;
+    totalInvested : Nat;
+    transactionCount : Nat;
   };
 
   public type UserCapitalGainsRecord = {
@@ -157,6 +213,14 @@ actor {
     stcg : Nat;
     ltcg : Nat;
   };
+
+  public type UserPortfolio = {
+    transactions : [Transaction];
+    holdings : [Holding];
+    capitalGains : CapitalGainsReport;
+  };
+
+  public type UserRegistration = { gmail : Text; name : Text };
 
   // Custom modules for sorting and comparison
   module Fund {
@@ -179,7 +243,9 @@ actor {
 
   module BlogPostSort {
     public func compareByCreatedAt(p1 : BlogPost, p2 : BlogPost) : Order.Order {
-      if (p1.createdAt == p2.createdAt) { Text.compare(p1.id, p2.id) } else {
+      if (p1.createdAt == p2.createdAt) {
+        Text.compare(p1.id, p2.id);
+      } else {
         Int.compare(p1.createdAt, p2.createdAt);
       };
     };
@@ -194,7 +260,7 @@ actor {
 
   var nextPostId = 1;
 
-  let tags = List.fromArray(["ELSS", "SIP", "Capital Gains", "NAV", "Mutual Fund", "Tax Saving", "LTCG", "STCG", "Dividend", "Redemption", "Switch", "Lump Sum", "Portfolio", "Rebalancing", "Goal Planning", "Risk Profile", "CAS", "CAMS", "KFintech", "NSDL", "AMC", "Broker", "ITR", "Bank Reconciliation", "Document Wallet", "Robo Advisory", "Version Guide", "Android App", "Affiliate"]);
+  let tags = List.fromArray(["ELSS", "SIP", "Capital Gains", "NAV", "Mutual Fund", "Tax Saving", "LTCG", "STCG", "Dividend", "Redemption", "Switch", "Lump Sum", "Portfolio", "Rebalancing", "Goal Planning", "Risk Profile", "CAS", "CAMS", "KFintech", "NSDL", "AMC", "Broker", "ITR", "Bank Reconciliation", "Document Wallet", "Robo Advisory", "Version Guide", "Android App", "Affiliate", "move to wordpress"]);
   let categories = List.fromArray(["Vision", "Technology", "Architecture", "Features", "Finance", "Design", "Roadmap", "Infrastructure", "Developer Guide", "History", "Growth", "Troubleshooting", "User Guide", "Release Notes", "FAQ", "Consumer Education", "Excel Users", "Google Sheets Users", "Platform Guide", "Version Guide"]);
 
   // Authorization
@@ -220,7 +286,26 @@ actor {
     true;
   };
 
-  // User Profile Management
+  // User Registration and Profile Management
+  public shared ({ caller }) func registerUser({ gmail; name } : UserRegistration) : async () {
+    if (caller.isAnonymous()) {
+      Runtime.trap("Registration failed: Anonymous caller is not allowed");
+    };
+
+    let currentTime = Time.now();
+
+    let profile : UserProfile = {
+      gmail;
+      name;
+      registeredAt = currentTime;
+      lastSeen = currentTime;
+    };
+
+    userProfiles.add(caller, profile);
+    userTransactions.add(caller, List.empty<Transaction>());
+    userHoldings.add(caller, Map.empty<Text, Holding>());
+  };
+
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can view profiles");
@@ -239,7 +324,140 @@ actor {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can save profiles");
     };
-    userProfiles.add(caller, profile);
+    let currentProfile = switch (userProfiles.get(caller)) {
+      case (null) { Runtime.trap("User profile not found") };
+      case (?profile) { profile };
+    };
+
+    let updatedProfile = {
+      profile with
+      name = profile.name;
+      lastSeen = Time.now();
+    };
+    userProfiles.add(caller, updatedProfile);
+  };
+
+  // User Last Seen Tracking
+  public shared ({ caller }) func userSession() : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can update last seen");
+    };
+    let currentProfile = switch (userProfiles.get(caller)) {
+      case (null) { Runtime.trap("User profile not found") };
+      case (?profile) { profile };
+    };
+    let updatedProfile = {
+      currentProfile with
+      lastSeen = Time.now();
+    };
+    userProfiles.add(caller, updatedProfile);
+  };
+
+  // Admin - User List
+  public query ({ caller }) func getAdminUserList() : async [UserSummary] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can view user list");
+    };
+
+    // Convert userProfiles to array for map/filter
+    userProfiles.entries().toArray().map(
+      func((principal, profile)) {
+        let holdings = switch (userHoldings.get(principal)) {
+          case (null) { Map.empty<Text, Holding>() };
+          case (?h) { h };
+        };
+
+        let holdingList = holdings.values().toArray();
+
+        let totalInvested = holdingList.foldLeft(
+          0,
+          func(acc, holding) {
+            acc + (holding.avgCostNav * holding.units);
+          },
+        );
+
+        let transactionCount = switch (userTransactions.get(principal)) {
+          case (null) { 0 };
+          case (?transactions) { transactions.size() };
+        };
+
+        {
+          principal = principal.toText();
+          gmail = profile.gmail;
+          registeredAt = profile.registeredAt;
+          lastSeen = profile.lastSeen;
+          totalInvested;
+          transactionCount;
+        };
+      }
+    );
+  };
+
+  public query ({ caller }) func getAdminUserPortfolio(id : Principal) : async ?UserPortfolio {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can view user portfolio");
+    };
+
+    if (not (userProfiles.containsKey(id))) {
+      return null;
+    };
+
+    let transactions = switch (userTransactions.get(id)) {
+      case (null) { List.empty<Transaction>() };
+      case (?existing) { existing };
+    };
+    let holdings = switch (userHoldings.get(id)) {
+      case (null) { Map.empty<Text, Holding>() };
+      case (?h) { h };
+    };
+
+    ?{
+      transactions = transactions.toArray().sort(Transaction.compareByDate);
+      holdings = holdings.values().toArray().sort(Holding.compareByFundId);
+      capitalGains = getCapitalGainsReportInternal(id);
+    };
+  };
+
+  // Helper for internal capital gains report (no access control)
+  private func getCapitalGainsReportInternal(principal : Principal) : CapitalGainsReport {
+    let transactions = switch (userTransactions.get(principal)) {
+      case (null) { List.empty<Transaction>() };
+      case (?existing) { existing };
+    };
+    let allTransactions = transactions.toArray();
+
+    let fundsWithSells = allTransactions.filter(
+      func(tx) { switch (tx.transactionType) { case (#sell) { true }; case (_) { false } } }
+    );
+
+    // Get unique fund IDs using Map
+    let fundMap = Map.empty<Text, ()>();
+    for (tx in fundsWithSells.values()) {
+      fundMap.add(tx.fundId, ());
+    };
+    let fundIds = fundMap.keys().toArray();
+
+    let gainDetails = fundIds.map(
+      func(fundId) {
+        calculateGainsForFundInternal(fundId, allTransactions);
+      }
+    );
+
+    // Calculate totals using foldLeft
+    let totalStcg = gainDetails.foldLeft(
+      0,
+      func(acc, detail) { acc + detail.stcg },
+    );
+    let totalLtcg = gainDetails.foldLeft(
+      0,
+      func(acc, detail) { acc + detail.ltcg },
+    );
+
+    {
+      totalStcg;
+      totalLtcg;
+      details = gainDetails;
+    };
   };
 
   // Fund Management
@@ -283,20 +501,31 @@ actor {
   };
 
   // Transaction Management
-  public shared ({ caller }) func addTransaction(fundId : Text, transactionType : TransactionType, units : Nat, navPerUnit : Nat, amount : Nat) : async () {
+  public shared ({ caller }) func addTransaction(input : TransactionInput) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can add transactions");
     };
-    switch (funds.get(fundId)) {
+    switch (funds.get(input.fundId)) {
       case (null) { Runtime.trap("Fund not found") };
       case (?_) {
         let transaction : Transaction = {
-          fundId;
-          transactionType;
-          units;
-          navPerUnit;
-          amount;
+          fundId = input.fundId;
+          transactionType = input.transactionType;
+          units = input.units;
+          navPerUnit = input.navPerUnit;
+          amount = input.amount;
           date = Time.now();
+          txnDate = input.txnDate;
+          amc = input.amc;
+          folioNumber = input.folioNumber;
+          agentCode = input.agentCode;
+          agentName = input.agentName;
+          subAgentCode = input.subAgentCode;
+          subAgentName = input.subAgentName;
+          bankAccount = input.bankAccount;
+          paymentMode = input.paymentMode;
+          isin = input.isin;
+          remarks = input.remarks;
         };
 
         // Update transactions
@@ -308,9 +537,9 @@ actor {
         userTransactions.add(caller, transactions);
 
         // Update holdings for buy/SIP
-        switch (transactionType) {
-          case (#buy) { updateHoldingsInternal(caller, fundId, units, navPerUnit) };
-          case (#sip) { updateHoldingsInternal(caller, fundId, units, navPerUnit) };
+        switch (input.transactionType) {
+          case (#buy) { updateHoldingsInternal(caller, input.fundId, input.units, input.navPerUnit) };
+          case (#sip) { updateHoldingsInternal(caller, input.fundId, input.units, input.navPerUnit) };
           case (#sell) { () };
         };
       };
@@ -347,22 +576,12 @@ actor {
     };
 
     let currentHolding = switch (userHoldingMap.get(fundId)) {
-      case (null) {
-        {
-          fundId;
-          units;
-          avgCostNav = navPerUnit;
-        };
-      };
+      case (null) { { fundId; units; avgCostNav = navPerUnit } };
       case (?holding) {
         let totalUnits = holding.units + units;
         let totalCost = (holding.units * holding.avgCostNav) + (units * navPerUnit);
         let newAvgNav = if (totalUnits > 0) { totalCost / totalUnits } else { 0 };
-        {
-          fundId;
-          units = totalUnits;
-          avgCostNav = newAvgNav;
-        };
+        { fundId; units = totalUnits; avgCostNav = newAvgNav };
       };
     };
 
@@ -428,48 +647,11 @@ actor {
   };
 
   // Capital Gains Report
-  public shared ({ caller }) func getCapitalGainsReport() : async CapitalGainsReport {
+  public query ({ caller }) func getCapitalGainsReport() : async CapitalGainsReport {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can view capital gains report");
     };
-    let transactions = switch (userTransactions.get(caller)) {
-      case (null) { List.empty<Transaction>() };
-      case (?existing) { existing };
-    };
-    let allTransactions = transactions.toArray();
-
-    let fundsWithSells = allTransactions.filter(
-      func(tx) { switch (tx.transactionType) { case (#sell) { true }; case (_) { false } } }
-    );
-
-    // Get unique fund IDs using Map
-    let fundMap = Map.empty<Text, ()>();
-    for (tx in fundsWithSells.values()) {
-      fundMap.add(tx.fundId, ());
-    };
-    let fundIds = fundMap.keys().toArray();
-
-    let gainDetails = fundIds.map(
-      func(fundId) {
-        calculateGainsForFundInternal(fundId, allTransactions);
-      }
-    );
-
-    // Calculate totals using foldLeft
-    let totalStcg = gainDetails.foldLeft(
-      0,
-      func(acc, detail) { acc + detail.stcg },
-    );
-    let totalLtcg = gainDetails.foldLeft(
-      0,
-      func(acc, detail) { acc + detail.ltcg },
-    );
-
-    {
-      totalStcg;
-      totalLtcg;
-      details = gainDetails;
-    };
+    getCapitalGainsReportInternal(caller);
   };
 
   // Helper: Calculate gains for single fund (simplified FIFO) - PRIVATE
@@ -509,7 +691,6 @@ actor {
 
   // ADMIN DATA EXPORT
 
-  // Get all registered users (admin only)
   public query ({ caller }) func adminGetAllUsers() : async [UserRecord] {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can export user data");
@@ -518,13 +699,15 @@ actor {
       func((principal, profile)) {
         {
           principal = principal.toText();
+          gmail = profile.gmail;
           name = profile.name;
+          registeredAt = profile.registeredAt;
+          lastSeen = profile.lastSeen;
         };
       }
     );
   };
 
-  // Get all transactions across all users (admin only)
   public query ({ caller }) func adminGetAllTransactions() : async [UserTransactionRecord] {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can export transaction data");
@@ -551,13 +734,23 @@ actor {
           navPerUnit = tx.navPerUnit;
           amount = tx.amount;
           date = tx.date;
+          txnDate = tx.txnDate;
+          amc = tx.amc;
+          folioNumber = tx.folioNumber;
+          agentCode = tx.agentCode;
+          agentName = tx.agentName;
+          subAgentCode = tx.subAgentCode;
+          subAgentName = tx.subAgentName;
+          bankAccount = tx.bankAccount;
+          paymentMode = tx.paymentMode;
+          isin = tx.isin;
+          remarks = tx.remarks;
         });
       };
     };
     result.toArray();
   };
 
-  // Get all holdings across all users (admin only)
   public query ({ caller }) func adminGetAllHoldings() : async [UserHoldingRecord] {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can export holdings data");
@@ -582,7 +775,6 @@ actor {
     result.toArray();
   };
 
-  // Get capital gains for all users (admin only)
   public query ({ caller }) func adminGetAllCapitalGains() : async [UserCapitalGainsRecord] {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can export capital gains data");
@@ -629,15 +821,14 @@ actor {
     nextPostId;
   };
 
-  // Get all published posts (public endpoint)
   public query ({ caller }) func getPublishedPosts() : async [BlogPost] {
     blogPosts.values().toArray().filter(
       func(post) {
         switch (post.status) {
           case (#published) {
             switch (post.scheduledAt) {
-              case (null) { true }; // No scheduled time = visible
-              case (?datetime) { datetime <= Time.now() }; // Only show scheduled posts when scheduledAt is in the past
+              case (null) { true };
+              case (?datetime) { datetime <= Time.now() };
             };
           };
           case (_) { false };
@@ -646,7 +837,6 @@ actor {
     ).sort(BlogPostSort.compareByCreatedAt);
   };
 
-  // Get all posts (admin only)
   public query ({ caller }) func getAllPosts() : async [BlogPost] {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can get all posts");
@@ -654,33 +844,25 @@ actor {
     blogPosts.values().toArray().sort(BlogPostSort.compareByCreatedAt);
   };
 
-  // Get single post by id (public if published, admin for all)
   public query ({ caller }) func getPostById(postId : Text) : async ?BlogPost {
     switch (blogPosts.get(postId)) {
       case (null) { null };
       case (?post) {
-        // Non-admin callers can only see published posts that meet the schedule criteria
         if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
           switch (post.status) {
             case (#published) {
               switch (post.scheduledAt) {
-                case (null) { ?post }; // No scheduled time = visible
-                case (?datetime) {
-                  if (datetime <= Time.now()) { ?post } else { null };
-                };
+                case (null) { ?post };
+                case (?datetime) { if (datetime <= Time.now()) { ?post } else { null } };
               };
             };
             case (_) { null };
           };
-        } else {
-          // Admins can see all posts regardless of status or schedule
-          ?post;
-        };
+        } else { ?post };
       };
     };
   };
 
-  // Create new post (admin only)
   public shared ({ caller }) func createPost(input : CreateBlogPostInput) : async Text {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can create posts");
@@ -708,7 +890,6 @@ actor {
     postId;
   };
 
-  // Update existing post (admin only)
   public shared ({ caller }) func updatePost(input : UpdateBlogPostInput) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can update posts");
@@ -736,7 +917,6 @@ actor {
     };
   };
 
-  // Update only the scheduledAt field of a post (admin only)
   public shared ({ caller }) func updatePostSchedule(postId : Text, scheduledAt : ?Time.Time) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can update post schedules");
@@ -755,7 +935,6 @@ actor {
     };
   };
 
-  // Reschedule all posts (admin only)
   public shared ({ caller }) func adminRescheduleAllPosts() : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can reschedule posts");
@@ -777,7 +956,6 @@ actor {
     };
   };
 
-  // Delete post (admin only)
   public shared ({ caller }) func deletePost(postId : Text) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can delete posts");
@@ -793,17 +971,14 @@ actor {
 
   // BLOG TAGS / CATEGORIES
 
-  // Retrieve all tags (non-admin as well)
   public query ({ caller }) func getAllTags() : async [Text] {
     tags.toArray();
   };
 
-  // Retrieve all categories (non-admin as well)
   public query ({ caller }) func getAllCategories() : async [Text] {
     categories.toArray();
   };
 
-  // Add a tag (admin only)
   public shared ({ caller }) func addTag(tag : Text) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can add tags");
@@ -822,7 +997,6 @@ actor {
     tags.add(trimmedTag);
   };
 
-  // Delete a tag (admin only)
   public shared ({ caller }) func deleteTag(tag : Text) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can delete tags");
@@ -840,7 +1014,6 @@ actor {
     };
   };
 
-  // Add a category (admin only)
   public shared ({ caller }) func addCategory(category : Text) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can add categories");
@@ -859,7 +1032,6 @@ actor {
     categories.add(trimmedCategory);
   };
 
-  // Delete a category (admin only)
   public shared ({ caller }) func deleteCategory(category : Text) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can delete categories");
@@ -898,7 +1070,7 @@ actor {
     let cText = c.toText();
     let lowerIndex = lower.findIndex(func(l) { l.toText() == cText });
     switch (lowerIndex) {
-      case (null) { c.toText() }; // not a lowercase letter
+      case (null) { c.toText() };
       case (?i) { upper[i].toText() };
     };
   };

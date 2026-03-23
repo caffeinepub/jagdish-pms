@@ -316,28 +316,29 @@ function SeedBlogPosts() {
 
   useEffect(() => {
     if (!isFetched || seeded.current) return;
-    if (backendPosts && backendPosts.length === 0) {
-      seeded.current = true;
-      const mutateAsync = createPost.mutateAsync;
-      (async () => {
-        for (const post of BLOG_POSTS) {
-          try {
-            await mutateAsync({
-              title: post.title,
-              summary: post.summary,
-              categories: post.categories,
-              tags: post.tags ?? [],
-              author: post.author,
-              readTime: post.readTime,
-              status: PostStatus.published,
-              content: post.content,
-            });
-          } catch {
-            // ignore individual failures
-          }
+    const existingTitles = new Set((backendPosts ?? []).map((p) => p.title));
+    const missing = BLOG_POSTS.filter((p) => !existingTitles.has(p.title));
+    if (missing.length === 0) return;
+    seeded.current = true;
+    const mutateAsync = createPost.mutateAsync;
+    (async () => {
+      for (const post of missing) {
+        try {
+          await mutateAsync({
+            title: post.title,
+            summary: post.summary,
+            categories: post.categories,
+            tags: post.tags ?? [],
+            author: post.author,
+            readTime: post.readTime,
+            status: PostStatus.published,
+            content: post.content,
+          });
+        } catch {
+          // ignore individual failures
         }
-      })();
-    }
+      }
+    })();
   }, [isFetched, backendPosts, createPost.mutateAsync]);
 
   return null;

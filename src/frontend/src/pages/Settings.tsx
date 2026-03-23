@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useQueryClient } from "@tanstack/react-query";
-import { ShieldCheck, User } from "lucide-react";
+import { Mail, ShieldCheck, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useActor } from "../hooks/useActor";
@@ -15,6 +15,7 @@ import {
   useIsCallerAdmin,
   useSaveUserProfile,
 } from "../hooks/useQueries";
+import { useUserEmail } from "../hooks/useUserEmail";
 
 export default function Settings() {
   const { data: profile, isLoading } = useGetCallerUserProfile();
@@ -22,19 +23,31 @@ export default function Settings() {
   const saveProfile = useSaveUserProfile();
   const { data: isAdmin, isLoading: adminLoading } = useIsCallerAdmin();
   const [name, setName] = useState("");
+  const [emailInput, setEmailInput] = useState("");
   const [claiming, setClaiming] = useState(false);
   const { actor } = useActor();
   const qc = useQueryClient();
+  const { email: savedEmail, saveEmail } = useUserEmail();
 
   useEffect(() => {
     if (profile?.name) setName(profile.name);
   }, [profile?.name]);
 
+  useEffect(() => {
+    if (savedEmail) setEmailInput(savedEmail);
+  }, [savedEmail]);
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
     try {
-      await saveProfile.mutateAsync({ name: name.trim() });
+      await saveProfile.mutateAsync({
+        name: name.trim(),
+        gmail: emailInput,
+        registeredAt: BigInt(profile?.registeredAt ?? 0),
+        lastSeen: BigInt(profile?.lastSeen ?? 0),
+      });
+      saveEmail(emailInput);
       toast.success("Profile updated");
     } catch {
       toast.error("Failed to update profile");
@@ -95,11 +108,33 @@ export default function Settings() {
                 disabled={isLoading}
               />
             </div>
+            <div>
+              <Label
+                htmlFor="settings-email"
+                className="flex items-center gap-1.5"
+              >
+                <Mail className="w-3.5 h-3.5" />
+                Your Gmail / Email
+              </Label>
+              <Input
+                id="settings-email"
+                data-ocid="settings.email.input"
+                type="email"
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
+                placeholder="e.g. yourname@gmail.com"
+                className="mt-1.5"
+              />
+              <p className="text-xs text-muted-foreground mt-1.5">
+                This is stored locally on your device so you can identify which
+                Google account you used to log in.
+              </p>
+            </div>
             <Button
               type="submit"
               data-ocid="settings.save.submit_button"
               disabled={saveProfile.isPending || !name.trim()}
-              style={{ background: "oklch(0.58 0.19 255)", color: "white" }}
+              style={{ background: "oklch(0.28 0.085 240)", color: "white" }}
             >
               {saveProfile.isPending ? "Saving..." : "Save Changes"}
             </Button>
@@ -151,7 +186,7 @@ export default function Settings() {
                     disabled={claiming || !actor}
                     data-ocid="settings.claim_admin.button"
                     style={{
-                      background: "oklch(0.58 0.19 255)",
+                      background: "oklch(0.28 0.085 240)",
                       color: "white",
                     }}
                   >

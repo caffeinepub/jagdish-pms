@@ -6,7 +6,7 @@
 
 @layer base {
   :root {
-    --radius: 0.5rem;
+    --radius: 0.625rem;
     --background: 0.97 0.004 220;
     --foreground: 0.15 0.02 255;
     --card: 1 0 0;
@@ -23,8 +23,8 @@
     --accent-foreground: 0.98 0 0;
     --destructive: 0.52 0.22 25;
     --destructive-foreground: 1 0 0;
-    --border: 0.88 0.01 220;
-    --input: 0.88 0.01 220;
+    --border: 0.9 0.008 220;
+    --input: 0.9 0.008 220;
     --ring: 0.52 0.13 185;
     --success: 0.52 0.16 145;
     --success-foreground: 1 0 0;
@@ -56,12 +56,15 @@
   font-family: "Playfair Display", serif;
 }
 
+/* Financial gain/loss colours */
 .gain-text {
-  color: oklch(0.52 0.16 145);
+  color: oklch(0.45 0.16 145);
 }
 .loss-text {
-  color: oklch(0.52 0.22 25);
+  color: oklch(0.5 0.22 25);
 }
+
+/* Sidebar */
 .sidebar-gradient {
   background: linear-gradient(
     180deg,
@@ -69,9 +72,13 @@
     oklch(0.22 0.07 240) 100%
   );
 }
+
+/* Navbar */
 .website-nav {
   background: oklch(0.2 0.075 240);
 }
+
+/* Hero section */
 .hero-gradient {
   background: linear-gradient(
     135deg,
@@ -80,8 +87,38 @@
     oklch(0.32 0.1 220) 100%
   );
 }
+
+/* Teal badge */
 .teal-badge {
   background: oklch(0.52 0.13 185 / 0.12);
   color: oklch(0.35 0.1 185);
   border: 1px solid oklch(0.52 0.13 185 / 0.3);
+}
+
+/* ── Shared card polish ───────────────────────────────────────── */
+
+/* Standard page card — subtle shadow + border */
+.page-card {
+  @apply rounded-xl border border-border bg-card;
+  box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px
+    rgba(0, 0, 0, 0.04);
+}
+
+/* KPI / stat card with left teal accent */
+.stat-card {
+  @apply rounded-xl border border-border bg-card;
+  box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px
+    rgba(0, 0, 0, 0.04);
+  border-left: 3px solid oklch(0.52 0.13 185);
+}
+
+/* Consistent table header row tint */
+.table-header-row {
+  background: oklch(0.955 0.006 230);
+  border-bottom: 1px solid oklch(0.88 0.01 230);
+}
+
+/* Page section header with divider */
+.page-header-divider {
+  @apply pb-4 mb-6 border-b border-border;
 }

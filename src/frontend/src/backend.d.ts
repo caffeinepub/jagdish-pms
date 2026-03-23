@@ -8,14 +8,25 @@ export interface None {
 }
 export type Option<T> = Some<T> | None;
 export interface UserTransactionRecord {
+    amc?: string;
+    folioNumber?: string;
     userName: string;
     principal: string;
     transactionType: string;
     navPerUnit: bigint;
+    bankAccount?: string;
     date: Time;
+    isin?: string;
+    agentCode?: string;
+    agentName?: string;
+    txnDate?: bigint;
     fundId: string;
     units: bigint;
+    paymentMode?: string;
     amount: bigint;
+    remarks?: string;
+    subAgentCode?: string;
+    subAgentName?: string;
 }
 export interface CapitalGainsReport {
     totalLtcg: bigint;
@@ -51,6 +62,11 @@ export interface HoldingSummary {
     units: bigint;
     amountInvested: bigint;
 }
+export interface UserPortfolio {
+    holdings: Array<Holding>;
+    transactions: Array<Transaction>;
+    capitalGains: CapitalGainsReport;
+}
 export interface PortfolioSummary {
     gainLoss: bigint;
     holdings: Array<HoldingSummary>;
@@ -77,14 +93,28 @@ export interface UpdateBlogPostInput {
 export interface UserRecord {
     principal: string;
     name: string;
+    gmail: string;
+    registeredAt: bigint;
+    lastSeen: bigint;
 }
 export interface Transaction {
+    amc?: string;
+    folioNumber?: string;
     transactionType: TransactionType;
     navPerUnit: bigint;
+    bankAccount?: string;
     date: Time;
+    isin?: string;
+    agentCode?: string;
+    agentName?: string;
+    txnDate?: bigint;
     fundId: string;
     units: bigint;
+    paymentMode?: string;
     amount: bigint;
+    remarks?: string;
+    subAgentCode?: string;
+    subAgentName?: string;
 }
 export interface CreateBlogPostInput {
     categories: Array<string>;
@@ -97,12 +127,24 @@ export interface CreateBlogPostInput {
     summary: string;
     scheduledAt?: Time;
 }
+export interface UserRegistration {
+    name: string;
+    gmail: string;
+}
 export interface UserCapitalGainsRecord {
     userName: string;
     principal: string;
     ltcg: bigint;
     stcg: bigint;
     fundId: string;
+}
+export interface UserSummary {
+    principal: string;
+    totalInvested: bigint;
+    gmail: string;
+    registeredAt: bigint;
+    lastSeen: bigint;
+    transactionCount: bigint;
 }
 export interface Holding {
     fundId: string;
@@ -116,8 +158,29 @@ export interface Fund {
     category: FundCategory;
     currentNav: bigint;
 }
+export interface TransactionInput {
+    amc?: string;
+    folioNumber?: string;
+    transactionType: TransactionType;
+    navPerUnit: bigint;
+    bankAccount?: string;
+    isin?: string;
+    agentCode?: string;
+    agentName?: string;
+    txnDate?: bigint;
+    fundId: string;
+    units: bigint;
+    paymentMode?: string;
+    amount: bigint;
+    remarks?: string;
+    subAgentCode?: string;
+    subAgentName?: string;
+}
 export interface UserProfile {
     name: string;
+    gmail: string;
+    registeredAt: bigint;
+    lastSeen: bigint;
 }
 export enum FundCategory {
     debt = "debt",
@@ -144,7 +207,7 @@ export interface backendInterface {
     addCategory(category: string): Promise<void>;
     addFund(id: string, name: string, category: FundCategory, initialNav: bigint): Promise<void>;
     addTag(tag: string): Promise<void>;
-    addTransaction(fundId: string, transactionType: TransactionType, units: bigint, navPerUnit: bigint, amount: bigint): Promise<void>;
+    addTransaction(input: TransactionInput): Promise<void>;
     adminGetAllCapitalGains(): Promise<Array<UserCapitalGainsRecord>>;
     adminGetAllHoldings(): Promise<Array<UserHoldingRecord>>;
     adminGetAllTransactions(): Promise<Array<UserTransactionRecord>>;
@@ -156,6 +219,8 @@ export interface backendInterface {
     deleteCategory(category: string): Promise<void>;
     deletePost(postId: string): Promise<void>;
     deleteTag(tag: string): Promise<void>;
+    getAdminUserList(): Promise<Array<UserSummary>>;
+    getAdminUserPortfolio(id: Principal): Promise<UserPortfolio | null>;
     getAllCategories(): Promise<Array<string>>;
     getAllFunds(): Promise<Array<Fund>>;
     getAllPosts(): Promise<Array<BlogPost>>;
@@ -171,8 +236,10 @@ export interface backendInterface {
     getTransactions(): Promise<Array<Transaction>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
+    registerUser(arg0: UserRegistration): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     updateNav(fundId: string, newNav: bigint): Promise<void>;
     updatePost(input: UpdateBlogPostInput): Promise<void>;
     updatePostSchedule(postId: string, scheduledAt: Time | null): Promise<void>;
+    userSession(): Promise<void>;
 }

@@ -79,12 +79,41 @@ export type PostStatus = { 'published' : null } |
   { 'draft' : null };
 export type Time = bigint;
 export interface Transaction {
+  'amc' : [] | [string],
+  'folioNumber' : [] | [string],
   'transactionType' : TransactionType,
   'navPerUnit' : bigint,
+  'bankAccount' : [] | [string],
   'date' : Time,
+  'isin' : [] | [string],
+  'agentCode' : [] | [string],
+  'agentName' : [] | [string],
+  'txnDate' : [] | [bigint],
   'fundId' : string,
   'units' : bigint,
+  'paymentMode' : [] | [string],
   'amount' : bigint,
+  'remarks' : [] | [string],
+  'subAgentCode' : [] | [string],
+  'subAgentName' : [] | [string],
+}
+export interface TransactionInput {
+  'amc' : [] | [string],
+  'folioNumber' : [] | [string],
+  'transactionType' : TransactionType,
+  'navPerUnit' : bigint,
+  'bankAccount' : [] | [string],
+  'isin' : [] | [string],
+  'agentCode' : [] | [string],
+  'agentName' : [] | [string],
+  'txnDate' : [] | [bigint],
+  'fundId' : string,
+  'units' : bigint,
+  'paymentMode' : [] | [string],
+  'amount' : bigint,
+  'remarks' : [] | [string],
+  'subAgentCode' : [] | [string],
+  'subAgentName' : [] | [string],
 }
 export type TransactionType = { 'buy' : null } |
   { 'sip' : null } |
@@ -115,30 +144,63 @@ export interface UserHoldingRecord {
   'units' : bigint,
   'avgCostNav' : bigint,
 }
-export interface UserProfile { 'name' : string }
-export interface UserRecord { 'principal' : string, 'name' : string }
+export interface UserPortfolio {
+  'holdings' : Array<Holding>,
+  'transactions' : Array<Transaction>,
+  'capitalGains' : CapitalGainsReport,
+}
+export interface UserProfile {
+  'name' : string,
+  'gmail' : string,
+  'registeredAt' : bigint,
+  'lastSeen' : bigint,
+}
+export interface UserRecord {
+  'principal' : string,
+  'name' : string,
+  'gmail' : string,
+  'registeredAt' : bigint,
+  'lastSeen' : bigint,
+}
+export interface UserRegistration { 'name' : string, 'gmail' : string }
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
+export interface UserSummary {
+  'principal' : string,
+  'totalInvested' : bigint,
+  'gmail' : string,
+  'registeredAt' : bigint,
+  'lastSeen' : bigint,
+  'transactionCount' : bigint,
+}
 export interface UserTransactionRecord {
+  'amc' : [] | [string],
+  'folioNumber' : [] | [string],
   'userName' : string,
   'principal' : string,
   'transactionType' : string,
   'navPerUnit' : bigint,
+  'bankAccount' : [] | [string],
   'date' : Time,
+  'isin' : [] | [string],
+  'agentCode' : [] | [string],
+  'agentName' : [] | [string],
+  'txnDate' : [] | [bigint],
   'fundId' : string,
   'units' : bigint,
+  'paymentMode' : [] | [string],
   'amount' : bigint,
+  'remarks' : [] | [string],
+  'subAgentCode' : [] | [string],
+  'subAgentName' : [] | [string],
 }
 export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'addCategory' : ActorMethod<[string], undefined>,
   'addFund' : ActorMethod<[string, string, FundCategory, bigint], undefined>,
   'addTag' : ActorMethod<[string], undefined>,
-  'addTransaction' : ActorMethod<
-    [string, TransactionType, bigint, bigint, bigint],
-    undefined
-  >,
+  'addTransaction' : ActorMethod<[TransactionInput], undefined>,
   'adminGetAllCapitalGains' : ActorMethod<[], Array<UserCapitalGainsRecord>>,
   'adminGetAllHoldings' : ActorMethod<[], Array<UserHoldingRecord>>,
   'adminGetAllTransactions' : ActorMethod<[], Array<UserTransactionRecord>>,
@@ -150,6 +212,8 @@ export interface _SERVICE {
   'deleteCategory' : ActorMethod<[string], undefined>,
   'deletePost' : ActorMethod<[string], undefined>,
   'deleteTag' : ActorMethod<[string], undefined>,
+  'getAdminUserList' : ActorMethod<[], Array<UserSummary>>,
+  'getAdminUserPortfolio' : ActorMethod<[Principal], [] | [UserPortfolio]>,
   'getAllCategories' : ActorMethod<[], Array<string>>,
   'getAllFunds' : ActorMethod<[], Array<Fund>>,
   'getAllPosts' : ActorMethod<[], Array<BlogPost>>,
@@ -165,10 +229,12 @@ export interface _SERVICE {
   'getTransactions' : ActorMethod<[], Array<Transaction>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
+  'registerUser' : ActorMethod<[UserRegistration], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'updateNav' : ActorMethod<[string, bigint], undefined>,
   'updatePost' : ActorMethod<[UpdateBlogPostInput], undefined>,
   'updatePostSchedule' : ActorMethod<[string, [] | [Time]], undefined>,
+  'userSession' : ActorMethod<[], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

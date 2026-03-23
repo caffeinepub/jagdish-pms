@@ -12,10 +12,12 @@ import {
   Settings,
   Sparkles,
   TrendingUp,
+  Users,
 } from "lucide-react";
 import { useVersion } from "../context/VersionContext";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import { useGetCallerUserProfile, useIsCallerAdmin } from "../hooks/useQueries";
+import { useUserEmail } from "../hooks/useUserEmail";
 
 type Page =
   | "dashboard"
@@ -25,6 +27,7 @@ type Page =
   | "capital-gains"
   | "settings"
   | "blog-admin"
+  | "admin-users"
   | "advanced-features"
   | "distributor-entry";
 
@@ -55,6 +58,7 @@ const baseNavItems: {
   },
   { id: "settings", label: "Settings", icon: Settings },
   { id: "blog-admin", label: "Blog Admin", icon: PenSquare, adminOnly: true },
+  { id: "admin-users", label: "Users", icon: Users, adminOnly: true },
 ];
 
 interface SidebarProps {
@@ -68,11 +72,12 @@ export default function Sidebar({
   onNavigate,
   onBackToWebsite,
 }: SidebarProps) {
-  const { clear, identity } = useInternetIdentity();
+  const { clear } = useInternetIdentity();
   const qc = useQueryClient();
   const { data: profile } = useGetCallerUserProfile();
   const { data: isAdmin } = useIsCallerAdmin();
   const { selectedVersion, currentVersion } = useVersion();
+  const { email } = useUserEmail();
 
   const handleLogout = async () => {
     await clear();
@@ -98,8 +103,9 @@ export default function Sidebar({
   return (
     <aside
       className="fixed left-0 top-0 h-full w-64 flex flex-col z-30 sidebar-gradient"
-      style={{ borderRight: "1px solid oklch(0.25 0.06 240)" }}
+      style={{ borderRight: "1px solid oklch(0.24 0.055 240)" }}
     >
+      {/* Logo */}
       <div className="px-5 py-5 flex items-center gap-3">
         <div
           className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -115,14 +121,14 @@ export default function Sidebar({
             Jagdish PMS
           </span>
           <div className="flex items-center gap-1.5 mt-0.5">
-            <span className="text-xs" style={{ color: "oklch(0.60 0.02 240)" }}>
+            <span className="text-xs" style={{ color: "oklch(0.58 0.02 240)" }}>
               Portfolio Manager
             </span>
             <span
               className="text-xs px-1.5 py-0.5 rounded font-medium"
               style={{
                 background: "oklch(0.52 0.13 185 / 0.22)",
-                color: "oklch(0.70 0.12 185)",
+                color: "oklch(0.72 0.12 185)",
               }}
             >
               {currentVersion.label}
@@ -131,11 +137,11 @@ export default function Sidebar({
         </div>
       </div>
 
-      <div className="px-3 mb-2">
-        <div style={{ height: "1px", background: "oklch(0.25 0.06 240)" }} />
+      <div className="px-3 mb-1">
+        <div style={{ height: "1px", background: "oklch(0.24 0.055 240)" }} />
       </div>
 
-      <nav className="flex-1 px-3 py-2 space-y-0.5">
+      <nav className="flex-1 px-2 py-2 space-y-0.5 overflow-y-auto">
         {visibleItems.map(
           ({ id, label, icon: Icon, adminOnly, advancedOnly, eliteOnly }) => {
             const isActive = currentPage === id;
@@ -145,30 +151,50 @@ export default function Sidebar({
                 type="button"
                 data-ocid={`nav.${id}.link`}
                 onClick={() => onNavigate(id)}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150"
                 style={{
                   background: isActive
-                    ? "oklch(0.28 0.075 240)"
+                    ? "oklch(0.52 0.13 185 / 0.22)"
                     : "transparent",
                   color: isActive
-                    ? "oklch(0.97 0.005 240)"
+                    ? "oklch(0.88 0.06 185)"
                     : eliteOnly
                       ? "oklch(0.62 0.13 160)"
                       : advancedOnly
                         ? "oklch(0.68 0.12 185)"
                         : adminOnly
                           ? "oklch(0.65 0.10 185)"
-                          : "oklch(0.70 0.02 240)",
+                          : "oklch(0.72 0.025 240)",
+                  boxShadow: isActive
+                    ? "inset 3px 0 0 oklch(0.52 0.13 185)"
+                    : "none",
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive) {
+                    (e.currentTarget as HTMLButtonElement).style.background =
+                      "oklch(0.25 0.055 240)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) {
+                    (e.currentTarget as HTMLButtonElement).style.background =
+                      "transparent";
+                  }
                 }}
               >
-                <Icon className="w-4 h-4 flex-shrink-0" />
+                <Icon
+                  className="w-4 h-4 flex-shrink-0"
+                  style={{
+                    color: isActive ? "oklch(0.72 0.14 185)" : undefined,
+                  }}
+                />
                 {label}
                 {advancedOnly && (
                   <span
                     className="ml-auto text-xs px-1.5 py-0.5 rounded"
                     style={{
                       background: "oklch(0.52 0.13 185 / 0.18)",
-                      color: "oklch(0.60 0.12 185)",
+                      color: "oklch(0.65 0.12 185)",
                     }}
                   >
                     v2
@@ -179,7 +205,7 @@ export default function Sidebar({
                     className="ml-auto text-xs px-1.5 py-0.5 rounded"
                     style={{
                       background: "oklch(0.52 0.13 160 / 0.18)",
-                      color: "oklch(0.48 0.12 160)",
+                      color: "oklch(0.55 0.12 160)",
                     }}
                   >
                     v3
@@ -190,7 +216,7 @@ export default function Sidebar({
                     className="ml-auto text-xs px-1.5 py-0.5 rounded"
                     style={{
                       background: "oklch(0.52 0.13 185 / 0.18)",
-                      color: "oklch(0.60 0.12 185)",
+                      color: "oklch(0.65 0.12 185)",
                     }}
                   >
                     Admin
@@ -206,7 +232,7 @@ export default function Sidebar({
         <div
           style={{
             height: "1px",
-            background: "oklch(0.25 0.06 240)",
+            background: "oklch(0.24 0.055 240)",
             marginBottom: "12px",
           }}
         />
@@ -217,18 +243,29 @@ export default function Sidebar({
             onClick={onBackToWebsite}
             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors mb-2"
             style={{
-              color: "oklch(0.55 0.10 185)",
+              color: "oklch(0.58 0.10 185)",
               background: "oklch(0.52 0.13 185 / 0.08)",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background =
+                "oklch(0.52 0.13 185 / 0.15)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background =
+                "oklch(0.52 0.13 185 / 0.08)";
             }}
           >
             <Globe className="w-3.5 h-3.5 flex-shrink-0" />
             Back to Website
           </button>
         )}
+        {/* User profile */}
         <div className="flex items-center gap-3 px-3 py-2">
           <div
-            className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold text-white"
-            style={{ background: "oklch(0.52 0.13 185)" }}
+            className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold text-white ring-2"
+            style={{
+              background: "oklch(0.52 0.13 185)",
+            }}
           >
             {initials}
           </div>
@@ -239,20 +276,40 @@ export default function Sidebar({
             >
               {profile?.name ?? "User"}
             </p>
-            <p
-              className="text-xs truncate"
-              style={{ color: "oklch(0.60 0.02 240)" }}
-            >
-              {identity?.getPrincipal().toString().slice(0, 12)}...
-            </p>
+            {email ? (
+              <p
+                className="text-xs truncate"
+                style={{ color: "oklch(0.55 0.02 240)" }}
+              >
+                {email}
+              </p>
+            ) : (
+              <button
+                type="button"
+                data-ocid="nav.add_email.button"
+                onClick={() => onNavigate("settings")}
+                className="text-xs truncate text-left w-full"
+                style={{ color: "oklch(0.52 0.13 185)", fontStyle: "italic" }}
+              >
+                Add email in Settings
+              </button>
+            )}
           </div>
           <button
             type="button"
             data-ocid="nav.logout.button"
             onClick={handleLogout}
             className="p-1.5 rounded-lg transition-colors"
-            style={{ color: "oklch(0.60 0.02 240)" }}
+            style={{ color: "oklch(0.55 0.02 240)" }}
             title="Logout"
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.color =
+                "oklch(0.80 0.03 240)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.color =
+                "oklch(0.55 0.02 240)";
+            }}
           >
             <LogOut className="w-3.5 h-3.5" />
           </button>

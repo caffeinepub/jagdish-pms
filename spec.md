@@ -1,34 +1,29 @@
 # Jagdish PMS
 
 ## Current State
-The app has a version switcher with Classic and Advanced versions. The sidebar shows different nav items based on version. There is no broker/AMC/distributor-wise data entry feature yet.
+Admin panel has tabs for blog management (Posts, Scheduled Posts, Tags & Categories, Pages), Data Export, and Settings. Admin can export all user data as CSV but cannot view individual user portfolios or login activity in the UI.
 
 ## Requested Changes (Diff)
 
 ### Add
-- New version "Elite" (v3) added to VERSIONS array in VersionContext.tsx
-- New page: `DistributorEntry.tsx` — available only in Elite version
-- The page has 4 tabs: **Broker**, **AMC**, **National Distributor**, **Sum**
-- In each of the first 3 tabs, users can add rows: name (e.g. Zerodha, SBI MF, NJ Wealth) + invested amount (INR)
-- The **Sum** tab shows a combined total from all three categories (Broker total, AMC total, Distributor total, Grand Total)
-- Data is stored in React state (no backend needed — this is a local entry form)
-- Sidebar shows "Distributor Entry" nav item only when version is "elite"
-- App.tsx routes to new page
+- New "Users" tab in Admin Panel sidebar
+- Backend: record `lastSeen` timestamp on every user session open
+- Backend: admin API to get all users with summary stats (principal, gmail, registeredAt, lastSeen, totalInvested, transactionCount)
+- Backend: admin API to get full portfolio for a specific user (transactions, holdings, capital gains)
+- Frontend: Users tab with top stat cards (Total Users, Active Today, Active Last 7 Days, New This Week)
+- Frontend: User list table with columns: User, Gmail, Registered On, Last Active, Total Invested, Transactions, and an expand/drill button
+- Frontend: Drill-down view per user showing their full transactions list, holdings summary, and capital gains -- read-only
 
 ### Modify
-- `VersionContext.tsx`: add Elite version entry (id: "elite", label: "Elite", badge: "v3")
-- `Sidebar.tsx`: add `distributor-entry` nav item with `eliteOnly` flag
-- `App.tsx`: add `distributor-entry` page to pageComponents map
-- `Sidebar.tsx`: filter logic to show eliteOnly items when selectedVersion === "elite"
+- Backend: update session registration to record lastSeen timestamp on every call
+- Admin Panel sidebar: add Users tab with people icon
 
 ### Remove
 - Nothing removed
 
 ## Implementation Plan
-1. Update VersionContext to add Elite version
-2. Create `src/frontend/src/pages/DistributorEntry.tsx` with 4 tabs (Broker, AMC, National Distributor, Sum)
-   - Each data tab: table with Name + Amount columns, Add Row button, Delete row button
-   - Pre-populate with common names (Zerodha, Groww, HDFC Securities for Broker; SBI MF, HDFC MF, ICICI Prudential for AMC; NJ Wealth, Prudent for Distributor)
-   - Sum tab: shows subtotal per category and grand total
-3. Update Sidebar to include distributor-entry item (eliteOnly)
-4. Update App.tsx to render DistributorEntry page
+1. Update backend to store and update `lastSeen` per user on registerUser call
+2. Add `getAdminUserList` backend function returning all users with summary stats (admin-only)
+3. Add `getAdminUserPortfolio` backend function returning full portfolio for a given principal (admin-only)
+4. Add Users tab to Admin Panel with stat cards and user table
+5. Add drill-down modal/expandable view per user with transactions, holdings, capital gains

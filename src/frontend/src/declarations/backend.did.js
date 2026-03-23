@@ -19,6 +19,24 @@ export const TransactionType = IDL.Variant({
   'sip' : IDL.Null,
   'sell' : IDL.Null,
 });
+export const TransactionInput = IDL.Record({
+  'amc' : IDL.Opt(IDL.Text),
+  'folioNumber' : IDL.Opt(IDL.Text),
+  'transactionType' : TransactionType,
+  'navPerUnit' : IDL.Nat,
+  'bankAccount' : IDL.Opt(IDL.Text),
+  'isin' : IDL.Opt(IDL.Text),
+  'agentCode' : IDL.Opt(IDL.Text),
+  'agentName' : IDL.Opt(IDL.Text),
+  'txnDate' : IDL.Opt(IDL.Nat),
+  'fundId' : IDL.Text,
+  'units' : IDL.Nat,
+  'paymentMode' : IDL.Opt(IDL.Text),
+  'amount' : IDL.Nat,
+  'remarks' : IDL.Opt(IDL.Text),
+  'subAgentCode' : IDL.Opt(IDL.Text),
+  'subAgentName' : IDL.Opt(IDL.Text),
+});
 export const UserCapitalGainsRecord = IDL.Record({
   'userName' : IDL.Text,
   'principal' : IDL.Text,
@@ -35,18 +53,32 @@ export const UserHoldingRecord = IDL.Record({
 });
 export const Time = IDL.Int;
 export const UserTransactionRecord = IDL.Record({
+  'amc' : IDL.Opt(IDL.Text),
+  'folioNumber' : IDL.Opt(IDL.Text),
   'userName' : IDL.Text,
   'principal' : IDL.Text,
   'transactionType' : IDL.Text,
   'navPerUnit' : IDL.Nat,
+  'bankAccount' : IDL.Opt(IDL.Text),
   'date' : Time,
+  'isin' : IDL.Opt(IDL.Text),
+  'agentCode' : IDL.Opt(IDL.Text),
+  'agentName' : IDL.Opt(IDL.Text),
+  'txnDate' : IDL.Opt(IDL.Nat),
   'fundId' : IDL.Text,
   'units' : IDL.Nat,
+  'paymentMode' : IDL.Opt(IDL.Text),
   'amount' : IDL.Nat,
+  'remarks' : IDL.Opt(IDL.Text),
+  'subAgentCode' : IDL.Opt(IDL.Text),
+  'subAgentName' : IDL.Opt(IDL.Text),
 });
 export const UserRecord = IDL.Record({
   'principal' : IDL.Text,
   'name' : IDL.Text,
+  'gmail' : IDL.Text,
+  'registeredAt' : IDL.Int,
+  'lastSeen' : IDL.Int,
 });
 export const UserRole = IDL.Variant({
   'admin' : IDL.Null,
@@ -69,6 +101,53 @@ export const CreateBlogPostInput = IDL.Record({
   'summary' : IDL.Text,
   'scheduledAt' : IDL.Opt(Time),
 });
+export const UserSummary = IDL.Record({
+  'principal' : IDL.Text,
+  'totalInvested' : IDL.Nat,
+  'gmail' : IDL.Text,
+  'registeredAt' : IDL.Int,
+  'lastSeen' : IDL.Int,
+  'transactionCount' : IDL.Nat,
+});
+export const Holding = IDL.Record({
+  'fundId' : IDL.Text,
+  'units' : IDL.Nat,
+  'avgCostNav' : IDL.Nat,
+});
+export const Transaction = IDL.Record({
+  'amc' : IDL.Opt(IDL.Text),
+  'folioNumber' : IDL.Opt(IDL.Text),
+  'transactionType' : TransactionType,
+  'navPerUnit' : IDL.Nat,
+  'bankAccount' : IDL.Opt(IDL.Text),
+  'date' : Time,
+  'isin' : IDL.Opt(IDL.Text),
+  'agentCode' : IDL.Opt(IDL.Text),
+  'agentName' : IDL.Opt(IDL.Text),
+  'txnDate' : IDL.Opt(IDL.Nat),
+  'fundId' : IDL.Text,
+  'units' : IDL.Nat,
+  'paymentMode' : IDL.Opt(IDL.Text),
+  'amount' : IDL.Nat,
+  'remarks' : IDL.Opt(IDL.Text),
+  'subAgentCode' : IDL.Opt(IDL.Text),
+  'subAgentName' : IDL.Opt(IDL.Text),
+});
+export const FundCapitalGain = IDL.Record({
+  'ltcg' : IDL.Nat,
+  'stcg' : IDL.Nat,
+  'fundId' : IDL.Text,
+});
+export const CapitalGainsReport = IDL.Record({
+  'totalLtcg' : IDL.Nat,
+  'totalStcg' : IDL.Nat,
+  'details' : IDL.Vec(FundCapitalGain),
+});
+export const UserPortfolio = IDL.Record({
+  'holdings' : IDL.Vec(Holding),
+  'transactions' : IDL.Vec(Transaction),
+  'capitalGains' : CapitalGainsReport,
+});
 export const Fund = IDL.Record({
   'id' : IDL.Text,
   'lastNavUpdate' : Time,
@@ -90,21 +169,11 @@ export const BlogPost = IDL.Record({
   'updatedAt' : Time,
   'scheduledAt' : IDL.Opt(Time),
 });
-export const UserProfile = IDL.Record({ 'name' : IDL.Text });
-export const FundCapitalGain = IDL.Record({
-  'ltcg' : IDL.Nat,
-  'stcg' : IDL.Nat,
-  'fundId' : IDL.Text,
-});
-export const CapitalGainsReport = IDL.Record({
-  'totalLtcg' : IDL.Nat,
-  'totalStcg' : IDL.Nat,
-  'details' : IDL.Vec(FundCapitalGain),
-});
-export const Holding = IDL.Record({
-  'fundId' : IDL.Text,
-  'units' : IDL.Nat,
-  'avgCostNav' : IDL.Nat,
+export const UserProfile = IDL.Record({
+  'name' : IDL.Text,
+  'gmail' : IDL.Text,
+  'registeredAt' : IDL.Int,
+  'lastSeen' : IDL.Int,
 });
 export const HoldingSummary = IDL.Record({
   'gainLoss' : IDL.Int,
@@ -119,13 +188,9 @@ export const PortfolioSummary = IDL.Record({
   'currentValue' : IDL.Nat,
   'investedAmount' : IDL.Nat,
 });
-export const Transaction = IDL.Record({
-  'transactionType' : TransactionType,
-  'navPerUnit' : IDL.Nat,
-  'date' : Time,
-  'fundId' : IDL.Text,
-  'units' : IDL.Nat,
-  'amount' : IDL.Nat,
+export const UserRegistration = IDL.Record({
+  'name' : IDL.Text,
+  'gmail' : IDL.Text,
 });
 export const UpdateBlogPostInput = IDL.Record({
   'id' : IDL.Text,
@@ -145,11 +210,7 @@ export const idlService = IDL.Service({
   'addCategory' : IDL.Func([IDL.Text], [], []),
   'addFund' : IDL.Func([IDL.Text, IDL.Text, FundCategory, IDL.Nat], [], []),
   'addTag' : IDL.Func([IDL.Text], [], []),
-  'addTransaction' : IDL.Func(
-      [IDL.Text, TransactionType, IDL.Nat, IDL.Nat, IDL.Nat],
-      [],
-      [],
-    ),
+  'addTransaction' : IDL.Func([TransactionInput], [], []),
   'adminGetAllCapitalGains' : IDL.Func(
       [],
       [IDL.Vec(UserCapitalGainsRecord)],
@@ -169,13 +230,19 @@ export const idlService = IDL.Service({
   'deleteCategory' : IDL.Func([IDL.Text], [], []),
   'deletePost' : IDL.Func([IDL.Text], [], []),
   'deleteTag' : IDL.Func([IDL.Text], [], []),
+  'getAdminUserList' : IDL.Func([], [IDL.Vec(UserSummary)], ['query']),
+  'getAdminUserPortfolio' : IDL.Func(
+      [IDL.Principal],
+      [IDL.Opt(UserPortfolio)],
+      ['query'],
+    ),
   'getAllCategories' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
   'getAllFunds' : IDL.Func([], [IDL.Vec(Fund)], ['query']),
   'getAllPosts' : IDL.Func([], [IDL.Vec(BlogPost)], ['query']),
   'getAllTags' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
-  'getCapitalGainsReport' : IDL.Func([], [CapitalGainsReport], []),
+  'getCapitalGainsReport' : IDL.Func([], [CapitalGainsReport], ['query']),
   'getHoldings' : IDL.Func([], [IDL.Vec(Holding)], ['query']),
   'getNextPostId' : IDL.Func([], [IDL.Nat], ['query']),
   'getPortfolioSummary' : IDL.Func([], [PortfolioSummary], ['query']),
@@ -188,10 +255,12 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+  'registerUser' : IDL.Func([UserRegistration], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'updateNav' : IDL.Func([IDL.Text, IDL.Nat], [], []),
   'updatePost' : IDL.Func([UpdateBlogPostInput], [], []),
   'updatePostSchedule' : IDL.Func([IDL.Text, IDL.Opt(Time)], [], []),
+  'userSession' : IDL.Func([], [], []),
 });
 
 export const idlInitArgs = [];
@@ -207,6 +276,24 @@ export const idlFactory = ({ IDL }) => {
     'buy' : IDL.Null,
     'sip' : IDL.Null,
     'sell' : IDL.Null,
+  });
+  const TransactionInput = IDL.Record({
+    'amc' : IDL.Opt(IDL.Text),
+    'folioNumber' : IDL.Opt(IDL.Text),
+    'transactionType' : TransactionType,
+    'navPerUnit' : IDL.Nat,
+    'bankAccount' : IDL.Opt(IDL.Text),
+    'isin' : IDL.Opt(IDL.Text),
+    'agentCode' : IDL.Opt(IDL.Text),
+    'agentName' : IDL.Opt(IDL.Text),
+    'txnDate' : IDL.Opt(IDL.Nat),
+    'fundId' : IDL.Text,
+    'units' : IDL.Nat,
+    'paymentMode' : IDL.Opt(IDL.Text),
+    'amount' : IDL.Nat,
+    'remarks' : IDL.Opt(IDL.Text),
+    'subAgentCode' : IDL.Opt(IDL.Text),
+    'subAgentName' : IDL.Opt(IDL.Text),
   });
   const UserCapitalGainsRecord = IDL.Record({
     'userName' : IDL.Text,
@@ -224,16 +311,33 @@ export const idlFactory = ({ IDL }) => {
   });
   const Time = IDL.Int;
   const UserTransactionRecord = IDL.Record({
+    'amc' : IDL.Opt(IDL.Text),
+    'folioNumber' : IDL.Opt(IDL.Text),
     'userName' : IDL.Text,
     'principal' : IDL.Text,
     'transactionType' : IDL.Text,
     'navPerUnit' : IDL.Nat,
+    'bankAccount' : IDL.Opt(IDL.Text),
     'date' : Time,
+    'isin' : IDL.Opt(IDL.Text),
+    'agentCode' : IDL.Opt(IDL.Text),
+    'agentName' : IDL.Opt(IDL.Text),
+    'txnDate' : IDL.Opt(IDL.Nat),
     'fundId' : IDL.Text,
     'units' : IDL.Nat,
+    'paymentMode' : IDL.Opt(IDL.Text),
     'amount' : IDL.Nat,
+    'remarks' : IDL.Opt(IDL.Text),
+    'subAgentCode' : IDL.Opt(IDL.Text),
+    'subAgentName' : IDL.Opt(IDL.Text),
   });
-  const UserRecord = IDL.Record({ 'principal' : IDL.Text, 'name' : IDL.Text });
+  const UserRecord = IDL.Record({
+    'principal' : IDL.Text,
+    'name' : IDL.Text,
+    'gmail' : IDL.Text,
+    'registeredAt' : IDL.Int,
+    'lastSeen' : IDL.Int,
+  });
   const UserRole = IDL.Variant({
     'admin' : IDL.Null,
     'user' : IDL.Null,
@@ -254,6 +358,53 @@ export const idlFactory = ({ IDL }) => {
     'readTime' : IDL.Text,
     'summary' : IDL.Text,
     'scheduledAt' : IDL.Opt(Time),
+  });
+  const UserSummary = IDL.Record({
+    'principal' : IDL.Text,
+    'totalInvested' : IDL.Nat,
+    'gmail' : IDL.Text,
+    'registeredAt' : IDL.Int,
+    'lastSeen' : IDL.Int,
+    'transactionCount' : IDL.Nat,
+  });
+  const Holding = IDL.Record({
+    'fundId' : IDL.Text,
+    'units' : IDL.Nat,
+    'avgCostNav' : IDL.Nat,
+  });
+  const Transaction = IDL.Record({
+    'amc' : IDL.Opt(IDL.Text),
+    'folioNumber' : IDL.Opt(IDL.Text),
+    'transactionType' : TransactionType,
+    'navPerUnit' : IDL.Nat,
+    'bankAccount' : IDL.Opt(IDL.Text),
+    'date' : Time,
+    'isin' : IDL.Opt(IDL.Text),
+    'agentCode' : IDL.Opt(IDL.Text),
+    'agentName' : IDL.Opt(IDL.Text),
+    'txnDate' : IDL.Opt(IDL.Nat),
+    'fundId' : IDL.Text,
+    'units' : IDL.Nat,
+    'paymentMode' : IDL.Opt(IDL.Text),
+    'amount' : IDL.Nat,
+    'remarks' : IDL.Opt(IDL.Text),
+    'subAgentCode' : IDL.Opt(IDL.Text),
+    'subAgentName' : IDL.Opt(IDL.Text),
+  });
+  const FundCapitalGain = IDL.Record({
+    'ltcg' : IDL.Nat,
+    'stcg' : IDL.Nat,
+    'fundId' : IDL.Text,
+  });
+  const CapitalGainsReport = IDL.Record({
+    'totalLtcg' : IDL.Nat,
+    'totalStcg' : IDL.Nat,
+    'details' : IDL.Vec(FundCapitalGain),
+  });
+  const UserPortfolio = IDL.Record({
+    'holdings' : IDL.Vec(Holding),
+    'transactions' : IDL.Vec(Transaction),
+    'capitalGains' : CapitalGainsReport,
   });
   const Fund = IDL.Record({
     'id' : IDL.Text,
@@ -276,21 +427,11 @@ export const idlFactory = ({ IDL }) => {
     'updatedAt' : Time,
     'scheduledAt' : IDL.Opt(Time),
   });
-  const UserProfile = IDL.Record({ 'name' : IDL.Text });
-  const FundCapitalGain = IDL.Record({
-    'ltcg' : IDL.Nat,
-    'stcg' : IDL.Nat,
-    'fundId' : IDL.Text,
-  });
-  const CapitalGainsReport = IDL.Record({
-    'totalLtcg' : IDL.Nat,
-    'totalStcg' : IDL.Nat,
-    'details' : IDL.Vec(FundCapitalGain),
-  });
-  const Holding = IDL.Record({
-    'fundId' : IDL.Text,
-    'units' : IDL.Nat,
-    'avgCostNav' : IDL.Nat,
+  const UserProfile = IDL.Record({
+    'name' : IDL.Text,
+    'gmail' : IDL.Text,
+    'registeredAt' : IDL.Int,
+    'lastSeen' : IDL.Int,
   });
   const HoldingSummary = IDL.Record({
     'gainLoss' : IDL.Int,
@@ -305,13 +446,9 @@ export const idlFactory = ({ IDL }) => {
     'currentValue' : IDL.Nat,
     'investedAmount' : IDL.Nat,
   });
-  const Transaction = IDL.Record({
-    'transactionType' : TransactionType,
-    'navPerUnit' : IDL.Nat,
-    'date' : Time,
-    'fundId' : IDL.Text,
-    'units' : IDL.Nat,
-    'amount' : IDL.Nat,
+  const UserRegistration = IDL.Record({
+    'name' : IDL.Text,
+    'gmail' : IDL.Text,
   });
   const UpdateBlogPostInput = IDL.Record({
     'id' : IDL.Text,
@@ -331,11 +468,7 @@ export const idlFactory = ({ IDL }) => {
     'addCategory' : IDL.Func([IDL.Text], [], []),
     'addFund' : IDL.Func([IDL.Text, IDL.Text, FundCategory, IDL.Nat], [], []),
     'addTag' : IDL.Func([IDL.Text], [], []),
-    'addTransaction' : IDL.Func(
-        [IDL.Text, TransactionType, IDL.Nat, IDL.Nat, IDL.Nat],
-        [],
-        [],
-      ),
+    'addTransaction' : IDL.Func([TransactionInput], [], []),
     'adminGetAllCapitalGains' : IDL.Func(
         [],
         [IDL.Vec(UserCapitalGainsRecord)],
@@ -359,13 +492,19 @@ export const idlFactory = ({ IDL }) => {
     'deleteCategory' : IDL.Func([IDL.Text], [], []),
     'deletePost' : IDL.Func([IDL.Text], [], []),
     'deleteTag' : IDL.Func([IDL.Text], [], []),
+    'getAdminUserList' : IDL.Func([], [IDL.Vec(UserSummary)], ['query']),
+    'getAdminUserPortfolio' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Opt(UserPortfolio)],
+        ['query'],
+      ),
     'getAllCategories' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
     'getAllFunds' : IDL.Func([], [IDL.Vec(Fund)], ['query']),
     'getAllPosts' : IDL.Func([], [IDL.Vec(BlogPost)], ['query']),
     'getAllTags' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
-    'getCapitalGainsReport' : IDL.Func([], [CapitalGainsReport], []),
+    'getCapitalGainsReport' : IDL.Func([], [CapitalGainsReport], ['query']),
     'getHoldings' : IDL.Func([], [IDL.Vec(Holding)], ['query']),
     'getNextPostId' : IDL.Func([], [IDL.Nat], ['query']),
     'getPortfolioSummary' : IDL.Func([], [PortfolioSummary], ['query']),
@@ -378,10 +517,12 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'registerUser' : IDL.Func([UserRegistration], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'updateNav' : IDL.Func([IDL.Text, IDL.Nat], [], []),
     'updatePost' : IDL.Func([UpdateBlogPostInput], [], []),
     'updatePostSchedule' : IDL.Func([IDL.Text, IDL.Opt(Time)], [], []),
+    'userSession' : IDL.Func([], [], []),
   });
 };
 

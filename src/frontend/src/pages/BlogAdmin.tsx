@@ -50,6 +50,7 @@ import {
 } from "@/hooks/useQueries";
 import {
   CalendarClock,
+  Clock,
   Edit2,
   Eye,
   EyeOff,
@@ -1098,12 +1099,15 @@ export default function BlogAdmin() {
   const seededRef = useRef(false);
 
   useEffect(() => {
-    if (!isFetched || seededRef.current || posts.length > 0) return;
+    if (!isFetched || seededRef.current) return;
+    const existingTitles = new Set(posts.map((p) => p.title));
+    const missing = BLOG_POSTS.filter((p) => !existingTitles.has(p.title));
+    if (missing.length === 0) return;
     seededRef.current = true;
     setIsSeeding(true);
     const seed = async () => {
       let count = 0;
-      for (const post of BLOG_POSTS) {
+      for (const post of missing) {
         try {
           await createPost.mutateAsync({
             title: post.title,
@@ -1124,7 +1128,7 @@ export default function BlogAdmin() {
       setIsSeeding(false);
     };
     seed();
-  }, [isFetched, posts.length, createPost.mutateAsync]);
+  }, [isFetched, posts, createPost.mutateAsync]);
 
   // Filter out static pages from blog post list
   const blogPosts = posts.filter((p) => !p.categories.includes("Static Page"));
@@ -1366,9 +1370,19 @@ export default function BlogAdmin() {
                     ({counts.published})
                   </span>
                 </TabsTrigger>
-                <TabsTrigger value="scheduled" className="text-xs px-4">
+                <TabsTrigger value="scheduled" className="text-xs px-4 gap-1">
+                  <Clock className="w-3 h-3" />
                   Scheduled{" "}
-                  <span className="ml-1.5 text-muted-foreground">
+                  <span
+                    className="ml-1"
+                    style={{
+                      color:
+                        counts.scheduled > 0
+                          ? "oklch(0.65 0.15 60)"
+                          : undefined,
+                      fontWeight: counts.scheduled > 0 ? 600 : undefined,
+                    }}
+                  >
                     ({counts.scheduled})
                   </span>
                 </TabsTrigger>
@@ -1467,6 +1481,11 @@ export default function BlogAdmin() {
                         <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden md:table-cell">
                           Category
                         </th>
+                        {statusFilter === "scheduled" && (
+                          <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                            Tags
+                          </th>
+                        )}
                         <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                           Status
                         </th>
@@ -1521,6 +1540,32 @@ export default function BlogAdmin() {
                                 ))}
                               </div>
                             </td>
+                            {statusFilter === "scheduled" && (
+                              <td className="px-4 py-3">
+                                <div className="flex flex-wrap gap-1 max-w-[160px]">
+                                  {post.tags && post.tags.length > 0 ? (
+                                    post.tags.map((tag) => (
+                                      <span
+                                        key={tag}
+                                        className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium"
+                                        style={{
+                                          background: "oklch(0.94 0.03 240)",
+                                          color: "oklch(0.35 0.10 240)",
+                                          border:
+                                            "1px solid oklch(0.85 0.05 240)",
+                                        }}
+                                      >
+                                        {tag}
+                                      </span>
+                                    ))
+                                  ) : (
+                                    <span className="text-xs text-muted-foreground">
+                                      —
+                                    </span>
+                                  )}
+                                </div>
+                              </td>
+                            )}
                             <td className="px-4 py-3">
                               <StatusBadge
                                 status={post.status}
@@ -1538,7 +1583,28 @@ export default function BlogAdmin() {
                               </span>
                             </td>
                             <td className="px-4 py-3">
-                              <div className="flex items-center justify-end gap-1">
+                              <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                                {statusFilter === "scheduled" && (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleQuickStatus(
+                                        post,
+                                        PostStatus.published,
+                                      )
+                                    }
+                                    className="flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold transition-colors"
+                                    style={{
+                                      background: "oklch(0.45 0.12 160)",
+                                      color: "white",
+                                    }}
+                                    title="Publish Now"
+                                    data-ocid={`blog_admin.publish_now.button.${idx + 1}`}
+                                  >
+                                    <Eye className="w-3 h-3" />
+                                    Publish Now
+                                  </button>
+                                )}
                                 {post.status !== PostStatus.published && (
                                   <button
                                     type="button"

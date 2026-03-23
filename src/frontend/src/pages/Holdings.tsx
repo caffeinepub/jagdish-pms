@@ -95,11 +95,11 @@ export default function Holdings() {
       "Fund Name",
       "Category",
       "Units",
-      "Avg Cost NAV (₹)",
-      "Current NAV (₹)",
-      "Invested (₹)",
-      "Current Value (₹)",
-      "Gain/Loss (₹)",
+      "Avg Cost NAV (\u20b9)",
+      "Current NAV (\u20b9)",
+      "Invested (\u20b9)",
+      "Current Value (\u20b9)",
+      "Gain/Loss (\u20b9)",
       "Return %",
     ];
     const rows = holdingsWithData.map((h) => {
@@ -123,9 +123,10 @@ export default function Holdings() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Page header */}
+      <div className="page-header-divider flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Holdings</h1>
+          <h1 className="text-2xl font-bold text-slate-800">Holdings</h1>
           <p className="text-muted-foreground text-sm mt-0.5">
             Your mutual fund portfolio positions
           </p>
@@ -133,6 +134,7 @@ export default function Holdings() {
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
+            size="sm"
             data-ocid="holdings.export.button"
             onClick={handleExport}
             disabled={holdingsWithData.length === 0}
@@ -142,8 +144,9 @@ export default function Holdings() {
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button
+                size="sm"
                 data-ocid="holdings.add_fund.open_modal_button"
-                style={{ background: "oklch(0.58 0.19 255)", color: "white" }}
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
               >
                 <Plus className="w-4 h-4 mr-1.5" /> Add Fund
               </Button>
@@ -194,7 +197,7 @@ export default function Holdings() {
                   </Select>
                 </div>
                 <div>
-                  <Label>Initial NAV (₹)</Label>
+                  <Label>Initial NAV (\u20b9)</Label>
                   <Input
                     data-ocid="holdings.nav.input"
                     type="number"
@@ -221,11 +224,7 @@ export default function Holdings() {
                     type="submit"
                     data-ocid="holdings.add_fund.confirm_button"
                     disabled={addFund.isPending}
-                    className="flex-1"
-                    style={{
-                      background: "oklch(0.58 0.19 255)",
-                      color: "white",
-                    }}
+                    className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
                   >
                     {addFund.isPending ? "Adding..." : "Add Fund"}
                   </Button>
@@ -236,7 +235,7 @@ export default function Holdings() {
         </div>
       </div>
 
-      <Card className="shadow-card border-0">
+      <Card className="page-card border-0 shadow-none">
         <CardHeader className="pb-3">
           <div className="flex flex-wrap gap-3 items-center">
             <div className="relative flex-1 min-w-48">
@@ -270,7 +269,7 @@ export default function Holdings() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr style={{ borderBottom: "1px solid oklch(0.91 0.008 240)" }}>
+                <tr className="table-header-row">
                   {[
                     "Fund Name",
                     "Category",
@@ -284,7 +283,7 @@ export default function Holdings() {
                   ].map((h) => (
                     <th
                       key={h}
-                      className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground whitespace-nowrap"
+                      className="text-left px-4 py-2.5 text-xs font-semibold text-muted-foreground whitespace-nowrap"
                     >
                       {h}
                     </th>
@@ -331,44 +330,50 @@ export default function Holdings() {
                       animate={{ opacity: 1 }}
                       transition={{ delay: i * 0.04 }}
                       style={{
-                        borderBottom: "1px solid oklch(0.95 0.006 240)",
+                        borderBottom: "1px solid oklch(0.94 0.006 230)",
                       }}
-                      className="hover:bg-accent/50 transition-colors"
+                      className="hover:bg-slate-50/70 transition-colors"
                     >
-                      <td className="px-4 py-3 font-medium">
+                      <td className="px-4 py-2.5 font-medium text-slate-800">
                         {h.fund?.name ?? h.fundId}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-2.5">
                         <Badge variant="secondary" className="text-xs">
                           {categoryLabel(h.fund?.category ?? "")}
                         </Badge>
                       </td>
-                      <td className="px-4 py-3">{formatUnits(h.units)}</td>
-                      <td className="px-4 py-3">
-                        ₹{(Number(h.avgCostNav) / 100).toFixed(2)}
+                      <td className="px-4 py-2.5 tabular-nums">
+                        {formatUnits(h.units)}
                       </td>
-                      <td className="px-4 py-3">
-                        ₹
+                      <td className="px-4 py-2.5 tabular-nums">
+                        \u20b9{(Number(h.avgCostNav) / 100).toFixed(2)}
+                      </td>
+                      <td className="px-4 py-2.5 tabular-nums">
+                        \u20b9
                         {h.fund
                           ? (Number(h.fund.currentNav) / 100).toFixed(2)
                           : "-"}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-2.5 tabular-nums">
                         {h.summaryH
                           ? formatINR(h.summaryH.amountInvested)
                           : "-"}
                       </td>
-                      <td className="px-4 py-3 font-semibold">
+                      <td className="px-4 py-2.5 font-semibold tabular-nums">
                         {h.summaryH ? formatINR(h.summaryH.currentValue) : "-"}
                       </td>
-                      <td className="px-4 py-3">
-                        <span className={gp >= 0 ? "gain-text" : "loss-text"}>
+                      <td className="px-4 py-2.5">
+                        <span
+                          className={`tabular-nums ${gp >= 0 ? "gain-text" : "loss-text"}`}
+                        >
                           {h.summaryH ? formatINR(h.summaryH.gainLoss) : "-"}
                         </span>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-2.5">
                         <span
-                          className={`font-semibold ${gp >= 0 ? "gain-text" : "loss-text"}`}
+                          className={`font-semibold tabular-nums ${
+                            gp >= 0 ? "gain-text" : "loss-text"
+                          }`}
                         >
                           {formatPercent(gp)}
                         </span>

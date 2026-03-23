@@ -4,6 +4,7 @@ import {
   type CreateBlogPostInput,
   FundCategory,
   PostStatus,
+  type TransactionInput,
   TransactionType,
   type UpdateBlogPostInput,
   type UserProfile,
@@ -11,7 +12,12 @@ import {
 import { useActor } from "./useActor";
 
 export { FundCategory, PostStatus, TransactionType };
-export type { BlogPost, CreateBlogPostInput, UpdateBlogPostInput };
+export type {
+  BlogPost,
+  CreateBlogPostInput,
+  TransactionInput,
+  UpdateBlogPostInput,
+};
 
 export function useGetCallerUserProfile() {
   const { actor, isFetching: actorFetching } = useActor();
@@ -129,27 +135,9 @@ export function useAddTransaction() {
   const { actor } = useActor();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({
-      fundId,
-      transactionType,
-      units,
-      navPerUnit,
-      amount,
-    }: {
-      fundId: string;
-      transactionType: TransactionType;
-      units: bigint;
-      navPerUnit: bigint;
-      amount: bigint;
-    }) => {
+    mutationFn: async (input: TransactionInput) => {
       if (!actor) throw new Error("Actor not available");
-      await actor.addTransaction(
-        fundId,
-        transactionType,
-        units,
-        navPerUnit,
-        amount,
-      );
+      await actor.addTransaction(input);
     },
     onSuccess: () =>
       qc.invalidateQueries({
@@ -389,6 +377,17 @@ export interface UserTransactionRecord {
   navPerUnit: bigint;
   amount: bigint;
   date: bigint;
+  amc?: string;
+  folioNumber?: string;
+  agentCode?: string;
+  agentName?: string;
+  subAgentCode?: string;
+  subAgentName?: string;
+  bankAccount?: string;
+  paymentMode?: string;
+  isin?: string;
+  remarks?: string;
+  txnDate?: bigint;
 }
 
 export interface UserHoldingRecord {
@@ -526,5 +525,73 @@ export function useDeleteCategory() {
       await actor.deleteCategory(category);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["allBlogCategories"] }),
+  });
+}
+
+// ─── Admin User List & Portfolio Hooks ────────────────────────────────────────
+
+export interface UserSummary {
+  principal: string;
+  gmail: string;
+  registeredAt: bigint;
+  lastSeen: bigint;
+  totalInvested: bigint;
+  transactionCount: bigint;
+}
+
+export interface UserPortfolio {
+  transactions: Array<{
+    fundId: string;
+    transactionType: string;
+    units: bigint;
+    navPerUnit: bigint;
+    amount: bigint;
+    date: bigint;
+    txnDate?: bigint;
+    amc?: string;
+    folioNumber?: string;
+    agentCode?: string;
+    agentName?: string;
+    subAgentCode?: string;
+    subAgentName?: string;
+    bankAccount?: string;
+    isin?: string;
+    paymentMode?: string;
+    remarks?: string;
+  }>;
+  holdings: Array<{
+    fundId: string;
+    units: bigint;
+    avgCostNav: bigint;
+  }>;
+  capitalGains: {
+    totalLtcg: bigint;
+    totalStcg: bigint;
+    details: Array<{ fundId: string; ltcg: bigint; stcg: bigint }>;
+  };
+}
+
+export function useGetAdminUserList() {
+  const { actor, isFetching } = useActor();
+  return useQuery<UserSummary[]>({
+    queryKey: ["adminUserList"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return (actor as any).getAdminUserList();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useGetAdminUserPortfolio(principal: string) {
+  const { actor, isFetching } = useActor();
+  return useQuery<UserPortfolio | null>({
+    queryKey: ["adminUserPortfolio", principal],
+    queryFn: async () => {
+      if (!actor || !principal) return null;
+      const result = await (actor as any).getAdminUserPortfolio(principal);
+      return result ?? null;
+    },
+    enabled: !!actor && !isFetching && !!principal,
   });
 }

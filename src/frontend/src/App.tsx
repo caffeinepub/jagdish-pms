@@ -25,6 +25,7 @@ import {
   useGetAllFunds,
   useGetCallerUserProfile,
 } from "./hooks/useQueries";
+import AdminUsers from "./pages/AdminUsers";
 import AdvancedFeatures from "./pages/AdvancedFeatures";
 import BlogAdmin from "./pages/BlogAdmin";
 import CapitalGains from "./pages/CapitalGains";
@@ -250,6 +251,7 @@ function MainLayout({ onBackToWebsite }: MainLayoutProps) {
     "capital-gains": <CapitalGains />,
     settings: <Settings />,
     "blog-admin": <BlogAdmin />,
+    "admin-users": <AdminUsers />,
     "advanced-features": <AdvancedFeatures />,
     "distributor-entry": <DistributorEntry />,
   };
