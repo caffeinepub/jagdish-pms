@@ -27,6 +27,7 @@ import {
   useGetAllFunds,
   useGetHoldings,
   useGetPortfolioSummary,
+  useIsCallerAdmin,
 } from "../hooks/useQueries";
 import { exportToCSV } from "../utils/exportCsv";
 import {
@@ -41,13 +42,13 @@ export default function Holdings() {
   const { data: holdings, isLoading } = useGetHoldings();
   const { data: funds } = useGetAllFunds();
   const { data: summary } = useGetPortfolioSummary();
+  const { data: isAdmin } = useIsCallerAdmin();
   const addFund = useAddFund();
 
   const [search, setSearch] = useState("");
   const [catFilter, setCatFilter] = useState("all");
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
-    id: "",
     name: "",
     category: "equity",
     initialNav: "",
@@ -71,22 +72,49 @@ export default function Holdings() {
 
   const handleAddFund = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.id || !form.name || !form.initialNav) return;
+    if (!form.name) {
+      toast.error("Please enter a fund name");
+      return;
+    }
+    if (!form.initialNav) {
+      toast.error("Please enter the initial NAV");
+      return;
+    }
     try {
+      const autoId = form.name
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^a-z0-9-]/g, "");
+
+      const existing = funds?.find((f) => f.id === autoId);
+      if (existing) {
+        toast.error(
+          `A fund named "${existing.name}" already exists with the same ID. Please use a more unique name.`,
+        );
+        return;
+      }
+
       const navPaise = BigInt(
         Math.round(Number.parseFloat(form.initialNav) * 100),
       );
       await addFund.mutateAsync({
-        id: form.id.toLowerCase().replace(/\s+/g, "-"),
+        id: autoId,
         name: form.name,
         category: form.category as FundCategory,
         initialNav: navPaise,
       });
       toast.success("Fund added successfully");
       setOpen(false);
-      setForm({ id: "", name: "", category: "equity", initialNav: "" });
-    } catch {
-      toast.error("Failed to add fund");
+      setForm({ name: "", category: "equity", initialNav: "" });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error(
+        msg.includes("Fund already exists")
+          ? "A fund with this name already exists. Please use a different name."
+          : msg.includes("Unauthorized")
+            ? "Only admins can add funds. Please make sure you are logged in as admin."
+            : `Failed to add fund: ${msg}`,
+      );
     }
   };
 
@@ -141,97 +169,98 @@ export default function Holdings() {
           >
             <Download className="w-4 h-4 mr-1.5" /> Export CSV
           </Button>
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button
-                size="sm"
-                data-ocid="holdings.add_fund.open_modal_button"
-                className="bg-primary text-primary-foreground hover:bg-primary/90"
-              >
-                <Plus className="w-4 h-4 mr-1.5" /> Add Fund
-              </Button>
-            </DialogTrigger>
-            <DialogContent data-ocid="holdings.add_fund.dialog">
-              <DialogHeader>
-                <DialogTitle>Add New Fund</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleAddFund} className="space-y-4 mt-2">
-                <div>
-                  <Label>Fund ID (unique slug)</Label>
-                  <Input
-                    data-ocid="holdings.fund_id.input"
-                    value={form.id}
-                    onChange={(e) => setForm({ ...form, id: e.target.value })}
-                    placeholder="e.g. hdfc-equity"
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label>Fund Name</Label>
-                  <Input
-                    data-ocid="holdings.fund_name.input"
-                    value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    placeholder="e.g. HDFC Equity Fund"
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label>Category</Label>
-                  <Select
-                    value={form.category}
-                    onValueChange={(v) => setForm({ ...form, category: v })}
-                  >
-                    <SelectTrigger
-                      data-ocid="holdings.category.select"
+          {isAdmin && (
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  size="sm"
+                  data-ocid="holdings.add_fund.open_modal_button"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                >
+                  <Plus className="w-4 h-4 mr-1.5" /> Add Fund
+                </Button>
+              </DialogTrigger>
+              <DialogContent data-ocid="holdings.add_fund.dialog">
+                <DialogHeader>
+                  <DialogTitle>Add New Fund</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleAddFund} className="space-y-4 mt-2">
+                  <div>
+                    <Label>Fund Name</Label>
+                    <Input
+                      data-ocid="holdings.fund_name.input"
+                      value={form.name}
+                      onChange={(e) =>
+                        setForm({ ...form, name: e.target.value })
+                      }
+                      placeholder="e.g. HDFC Equity Fund"
                       className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label>Category</Label>
+                    <Select
+                      value={form.category}
+                      onValueChange={(v) => setForm({ ...form, category: v })}
                     >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="equity">Equity</SelectItem>
-                      <SelectItem value="debt">Debt</SelectItem>
-                      <SelectItem value="hybrid">Hybrid</SelectItem>
-                      <SelectItem value="elss">ELSS</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Initial NAV (\u20b9)</Label>
-                  <Input
-                    data-ocid="holdings.nav.input"
-                    type="number"
-                    step="0.01"
-                    value={form.initialNav}
-                    onChange={(e) =>
-                      setForm({ ...form, initialNav: e.target.value })
-                    }
-                    placeholder="e.g. 625.00"
-                    className="mt-1"
-                  />
-                </div>
-                <div className="flex gap-2 pt-1">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    data-ocid="holdings.add_fund.cancel_button"
-                    onClick={() => setOpen(false)}
-                    className="flex-1"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    data-ocid="holdings.add_fund.confirm_button"
-                    disabled={addFund.isPending}
-                    className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
-                  >
-                    {addFund.isPending ? "Adding..." : "Add Fund"}
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
+                      <SelectTrigger
+                        data-ocid="holdings.category.select"
+                        className="mt-1"
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="equity">Equity</SelectItem>
+                        <SelectItem value="debt">Debt</SelectItem>
+                        <SelectItem value="hybrid">Hybrid</SelectItem>
+                        <SelectItem value="elss">ELSS</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Initial NAV (\u20b9)</Label>
+                    <Input
+                      data-ocid="holdings.nav.input"
+                      type="number"
+                      step="0.01"
+                      value={form.initialNav}
+                      onChange={(e) =>
+                        setForm({ ...form, initialNav: e.target.value })
+                      }
+                      placeholder="e.g. 625.00"
+                      className="mt-1"
+                    />
+                  </div>
+                  <div className="flex gap-2 pt-1">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      data-ocid="holdings.add_fund.cancel_button"
+                      onClick={() => {
+                        setOpen(false);
+                        setForm({
+                          name: "",
+                          category: "equity",
+                          initialNav: "",
+                        });
+                      }}
+                      className="flex-1"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      data-ocid="holdings.add_fund.confirm_button"
+                      disabled={addFund.isPending}
+                      className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
+                    >
+                      {addFund.isPending ? "Adding..." : "Add Fund"}
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
       </div>
 

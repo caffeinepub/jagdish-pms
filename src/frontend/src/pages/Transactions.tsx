@@ -179,8 +179,13 @@ export default function Transactions() {
       toast.success("Transaction recorded");
       setOpen(false);
       setForm(emptyForm);
-    } catch {
-      toast.error("Failed to record transaction");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error(
+        msg.includes("Fund not found")
+          ? "Selected fund not found. Please add the fund first from Holdings page."
+          : `Failed to record transaction: ${msg}`,
+      );
     }
   };
 
