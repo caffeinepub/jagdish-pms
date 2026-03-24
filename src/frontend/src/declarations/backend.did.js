@@ -150,8 +150,10 @@ export const UserPortfolio = IDL.Record({
 });
 export const Fund = IDL.Record({
   'id' : IDL.Text,
+  'amc' : IDL.Text,
   'lastNavUpdate' : Time,
   'name' : IDL.Text,
+  'fundType' : IDL.Text,
   'category' : FundCategory,
   'currentNav' : IDL.Nat,
 });
@@ -208,7 +210,12 @@ export const UpdateBlogPostInput = IDL.Record({
 export const idlService = IDL.Service({
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
   'addCategory' : IDL.Func([IDL.Text], [], []),
-  'addFund' : IDL.Func([IDL.Text, IDL.Text, FundCategory, IDL.Nat], [], []),
+  'addFavoriteFund' : IDL.Func([IDL.Text], [], []),
+  'addFund' : IDL.Func(
+      [IDL.Text, IDL.Text, FundCategory, IDL.Nat, IDL.Text, IDL.Text],
+      [],
+      [],
+    ),
   'addTag' : IDL.Func([IDL.Text], [], []),
   'addTransaction' : IDL.Func([TransactionInput], [], []),
   'adminGetAllCapitalGains' : IDL.Func(
@@ -243,6 +250,7 @@ export const idlService = IDL.Service({
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getCapitalGainsReport' : IDL.Func([], [CapitalGainsReport], ['query']),
+  'getFavoriteFunds' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
   'getHoldings' : IDL.Func([], [IDL.Vec(Holding)], ['query']),
   'getNextPostId' : IDL.Func([], [IDL.Nat], ['query']),
   'getPortfolioSummary' : IDL.Func([], [PortfolioSummary], ['query']),
@@ -255,7 +263,9 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+  'isFundFavorite' : IDL.Func([IDL.Text], [IDL.Bool], ['query']),
   'registerUser' : IDL.Func([UserRegistration], [], []),
+  'removeFavoriteFund' : IDL.Func([IDL.Text], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'updateNav' : IDL.Func([IDL.Text, IDL.Nat], [], []),
   'updatePost' : IDL.Func([UpdateBlogPostInput], [], []),
@@ -408,8 +418,10 @@ export const idlFactory = ({ IDL }) => {
   });
   const Fund = IDL.Record({
     'id' : IDL.Text,
+    'amc' : IDL.Text,
     'lastNavUpdate' : Time,
     'name' : IDL.Text,
+    'fundType' : IDL.Text,
     'category' : FundCategory,
     'currentNav' : IDL.Nat,
   });
@@ -466,7 +478,12 @@ export const idlFactory = ({ IDL }) => {
   return IDL.Service({
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
     'addCategory' : IDL.Func([IDL.Text], [], []),
-    'addFund' : IDL.Func([IDL.Text, IDL.Text, FundCategory, IDL.Nat], [], []),
+    'addFavoriteFund' : IDL.Func([IDL.Text], [], []),
+    'addFund' : IDL.Func(
+        [IDL.Text, IDL.Text, FundCategory, IDL.Nat, IDL.Text, IDL.Text],
+        [],
+        [],
+      ),
     'addTag' : IDL.Func([IDL.Text], [], []),
     'addTransaction' : IDL.Func([TransactionInput], [], []),
     'adminGetAllCapitalGains' : IDL.Func(
@@ -505,6 +522,7 @@ export const idlFactory = ({ IDL }) => {
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getCapitalGainsReport' : IDL.Func([], [CapitalGainsReport], ['query']),
+    'getFavoriteFunds' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
     'getHoldings' : IDL.Func([], [IDL.Vec(Holding)], ['query']),
     'getNextPostId' : IDL.Func([], [IDL.Nat], ['query']),
     'getPortfolioSummary' : IDL.Func([], [PortfolioSummary], ['query']),
@@ -517,7 +535,9 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'isFundFavorite' : IDL.Func([IDL.Text], [IDL.Bool], ['query']),
     'registerUser' : IDL.Func([UserRegistration], [], []),
+    'removeFavoriteFund' : IDL.Func([IDL.Text], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'updateNav' : IDL.Func([IDL.Text, IDL.Nat], [], []),
     'updatePost' : IDL.Func([UpdateBlogPostInput], [], []),

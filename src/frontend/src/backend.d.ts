@@ -153,8 +153,10 @@ export interface Holding {
 }
 export interface Fund {
     id: string;
+    amc: string;
     lastNavUpdate: Time;
     name: string;
+    fundType: string;
     category: FundCategory;
     currentNav: bigint;
 }
@@ -205,7 +207,8 @@ export enum UserRole {
 }
 export interface backendInterface {
     addCategory(category: string): Promise<void>;
-    addFund(id: string, name: string, category: FundCategory, initialNav: bigint): Promise<void>;
+    addFavoriteFund(fundId: string): Promise<void>;
+    addFund(id: string, name: string, category: FundCategory, initialNav: bigint, amc: string, fundType: string): Promise<void>;
     addTag(tag: string): Promise<void>;
     addTransaction(input: TransactionInput): Promise<void>;
     adminGetAllCapitalGains(): Promise<Array<UserCapitalGainsRecord>>;
@@ -228,6 +231,7 @@ export interface backendInterface {
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getCapitalGainsReport(): Promise<CapitalGainsReport>;
+    getFavoriteFunds(): Promise<Array<string>>;
     getHoldings(): Promise<Array<Holding>>;
     getNextPostId(): Promise<bigint>;
     getPortfolioSummary(): Promise<PortfolioSummary>;
@@ -236,7 +240,9 @@ export interface backendInterface {
     getTransactions(): Promise<Array<Transaction>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
+    isFundFavorite(fundId: string): Promise<boolean>;
     registerUser(arg0: UserRegistration): Promise<void>;
+    removeFavoriteFund(fundId: string): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     updateNav(fundId: string, newNav: bigint): Promise<void>;
     updatePost(input: UpdateBlogPostInput): Promise<void>;

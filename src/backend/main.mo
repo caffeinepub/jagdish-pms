@@ -12,7 +12,9 @@ import Principal "mo:core/Principal";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 
+import Set "mo:core/Set";
 
+// Migration applied via with-clause
 
 actor {
   // Types
@@ -29,6 +31,8 @@ actor {
     category : FundCategory;
     currentNav : Nat; // in paise
     lastNavUpdate : Time.Time;
+    amc : Text;
+    fundType : Text; // New field: "Growth"/"Dividend"/"IDCW"
   };
 
   public type TransactionType = {
@@ -257,6 +261,7 @@ actor {
   let userHoldings = Map.empty<Principal, Map.Map<Text, Holding>>();
   let userProfiles = Map.empty<Principal, UserProfile>();
   let blogPosts = Map.empty<Text, BlogPost>();
+  let userFavorites = Map.empty<Principal, Set.Set<Text>>();
 
   var nextPostId = 1;
 
@@ -292,6 +297,11 @@ actor {
       Runtime.trap("Registration failed: Anonymous caller is not allowed");
     };
 
+    // Check if user is already registered
+    if (userProfiles.containsKey(caller)) {
+      Runtime.trap("User already registered");
+    };
+
     let currentTime = Time.now();
 
     let profile : UserProfile = {
@@ -304,6 +314,9 @@ actor {
     userProfiles.add(caller, profile);
     userTransactions.add(caller, List.empty<Transaction>());
     userHoldings.add(caller, Map.empty<Text, Holding>());
+    
+    // Auto-assign user role upon registration
+    accessControlState.userRoles.add(caller, #user);
   };
 
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
@@ -461,7 +474,7 @@ actor {
   };
 
   // Fund Management
-  public shared ({ caller }) func addFund(id : Text, name : Text, category : FundCategory, initialNav : Nat) : async () {
+  public shared ({ caller }) func addFund(id : Text, name : Text, category : FundCategory, initialNav : Nat, amc : Text, fundType : Text) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can add funds");
     };
@@ -474,6 +487,8 @@ actor {
       category;
       currentNav = initialNav;
       lastNavUpdate = Time.now();
+      amc;
+      fundType;
     };
     funds.add(id, fund);
   };
@@ -1074,4 +1089,56 @@ actor {
       case (?i) { upper[i].toText() };
     };
   };
+
+  // FAVORITE FUNDS
+
+  public shared ({ caller }) func addFavoriteFund(fundId : Text) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only logged in users can add favorites");
+    };
+    if (not (funds.containsKey(fundId))) {
+      Runtime.trap("Invalid fund ID, cannot favorite non existing fund");
+    };
+    let favorites = switch (userFavorites.get(caller)) {
+      case (null) { Set.empty<Text>() };
+      case (?existing) { existing };
+    };
+    favorites.add(fundId);
+    userFavorites.add(caller, favorites);
+  };
+
+  public shared ({ caller }) func removeFavoriteFund(fundId : Text) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only logged in users can remove favorites");
+    };
+    let favorites = switch (userFavorites.get(caller)) {
+      case (null) { Set.empty<Text>() };
+      case (?existing) { existing };
+    };
+    favorites.remove(fundId);
+    userFavorites.add(caller, favorites);
+  };
+
+  public query ({ caller }) func getFavoriteFunds() : async [Text] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only logged in users can view their favorite funds");
+    };
+    let favorites = switch (userFavorites.get(caller)) {
+      case (null) { Set.empty<Text>() };
+      case (?existing) { existing };
+    };
+    favorites.toArray();
+  };
+
+  public query ({ caller }) func isFundFavorite(fundId : Text) : async Bool {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only logged in users can check favorite status");
+    };
+    let favorites = switch (userFavorites.get(caller)) {
+      case (null) { Set.empty<Text>() };
+      case (?existing) { existing };
+    };
+    favorites.contains(fundId);
+  };
 };
+

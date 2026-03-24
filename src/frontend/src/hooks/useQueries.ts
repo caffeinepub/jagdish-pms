@@ -118,14 +118,25 @@ export function useAddFund() {
       name,
       category,
       initialNav,
+      amc,
+      fundType,
     }: {
       id: string;
       name: string;
       category: FundCategory;
       initialNav: bigint;
+      amc?: string;
+      fundType?: string;
     }) => {
       if (!actor) throw new Error("Actor not available");
-      await actor.addFund(id, name, category, initialNav);
+      await actor.addFund(
+        id,
+        name,
+        category,
+        initialNav,
+        amc ?? "",
+        fundType ?? "",
+      );
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["funds"] }),
   });
@@ -170,6 +181,44 @@ export function useUpdateNav() {
             q.queryKey[0] as string,
           ),
       }),
+  });
+}
+
+// ─── Favorite Funds Hooks ─────────────────────────────────────────────────────
+
+export function useGetFavoriteFunds() {
+  const { actor, isFetching } = useActor();
+  return useQuery<string[]>({
+    queryKey: ["favoriteFunds"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getFavoriteFunds();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useAddFavoriteFund() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (fundId: string) => {
+      if (!actor) throw new Error("Actor not available");
+      await actor.addFavoriteFund(fundId);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["favoriteFunds"] }),
+  });
+}
+
+export function useRemoveFavoriteFund() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (fundId: string) => {
+      if (!actor) throw new Error("Actor not available");
+      await actor.removeFavoriteFund(fundId);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["favoriteFunds"] }),
   });
 }
 

@@ -37,6 +37,15 @@ import {
   formatPercent,
   formatUnits,
 } from "../utils/format";
+import { INDIAN_AMCS } from "./Transactions";
+
+const FUND_TYPES = [
+  "Growth",
+  "Dividend",
+  "IDCW",
+  "Direct Growth",
+  "Direct Dividend",
+];
 
 export default function Holdings() {
   const { data: holdings, isLoading } = useGetHoldings();
@@ -52,6 +61,10 @@ export default function Holdings() {
     name: "",
     category: "equity",
     initialNav: "",
+    amc: "",
+    customAmc: "",
+    showAddAmc: false,
+    fundType: "",
   });
 
   const holdingsWithData = useMemo(() => {
@@ -97,15 +110,29 @@ export default function Holdings() {
       const navPaise = BigInt(
         Math.round(Number.parseFloat(form.initialNav) * 100),
       );
+
+      const resolvedAmc =
+        form.amc === "__add_new__" ? form.customAmc : form.amc;
+
       await addFund.mutateAsync({
         id: autoId,
         name: form.name,
         category: form.category as FundCategory,
         initialNav: navPaise,
+        amc: resolvedAmc || undefined,
+        fundType: form.fundType || undefined,
       });
       toast.success("Fund added successfully");
       setOpen(false);
-      setForm({ name: "", category: "equity", initialNav: "" });
+      setForm({
+        name: "",
+        category: "equity",
+        initialNav: "",
+        amc: "",
+        customAmc: "",
+        showAddAmc: false,
+        fundType: "",
+      });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       toast.error(
@@ -180,7 +207,10 @@ export default function Holdings() {
                   <Plus className="w-4 h-4 mr-1.5" /> Add Fund
                 </Button>
               </DialogTrigger>
-              <DialogContent data-ocid="holdings.add_fund.dialog">
+              <DialogContent
+                data-ocid="holdings.add_fund.dialog"
+                className="max-w-md"
+              >
                 <DialogHeader>
                   <DialogTitle>Add New Fund</DialogTitle>
                 </DialogHeader>
@@ -197,28 +227,96 @@ export default function Holdings() {
                       className="mt-1"
                     />
                   </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label>Category</Label>
+                      <Select
+                        value={form.category}
+                        onValueChange={(v) => setForm({ ...form, category: v })}
+                      >
+                        <SelectTrigger
+                          data-ocid="holdings.category.select"
+                          className="mt-1"
+                        >
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="equity">Equity</SelectItem>
+                          <SelectItem value="debt">Debt</SelectItem>
+                          <SelectItem value="hybrid">Hybrid</SelectItem>
+                          <SelectItem value="elss">ELSS</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Fund Type</Label>
+                      <Select
+                        value={form.fundType}
+                        onValueChange={(v) => setForm({ ...form, fundType: v })}
+                      >
+                        <SelectTrigger
+                          data-ocid="holdings.fund_type.select"
+                          className="mt-1"
+                        >
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {FUND_TYPES.map((t) => (
+                            <SelectItem key={t} value={t}>
+                              {t}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
                   <div>
-                    <Label>Category</Label>
+                    <Label>AMC</Label>
                     <Select
-                      value={form.category}
-                      onValueChange={(v) => setForm({ ...form, category: v })}
+                      value={form.amc}
+                      onValueChange={(v) =>
+                        setForm({
+                          ...form,
+                          amc: v,
+                          showAddAmc: v === "__add_new__",
+                          customAmc: v !== "__add_new__" ? "" : form.customAmc,
+                        })
+                      }
                     >
                       <SelectTrigger
-                        data-ocid="holdings.category.select"
+                        data-ocid="holdings.amc.select"
                         className="mt-1"
                       >
-                        <SelectValue />
+                        <SelectValue placeholder="Select AMC (optional)" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="equity">Equity</SelectItem>
-                        <SelectItem value="debt">Debt</SelectItem>
-                        <SelectItem value="hybrid">Hybrid</SelectItem>
-                        <SelectItem value="elss">ELSS</SelectItem>
+                        {INDIAN_AMCS.map((amc) => (
+                          <SelectItem key={amc} value={amc}>
+                            {amc}
+                          </SelectItem>
+                        ))}
+                        <SelectItem value="__add_new__">
+                          + Add New AMC
+                        </SelectItem>
                       </SelectContent>
                     </Select>
+                    {form.showAddAmc && (
+                      <Input
+                        data-ocid="holdings.custom_amc.input"
+                        value={form.customAmc}
+                        onChange={(e) =>
+                          setForm({ ...form, customAmc: e.target.value })
+                        }
+                        placeholder="Type AMC name"
+                        className="mt-2"
+                      />
+                    )}
                   </div>
+
                   <div>
-                    <Label>Initial NAV (\u20b9)</Label>
+                    <Label>Initial NAV (₹)</Label>
                     <Input
                       data-ocid="holdings.nav.input"
                       type="number"
@@ -231,6 +329,7 @@ export default function Holdings() {
                       className="mt-1"
                     />
                   </div>
+
                   <div className="flex gap-2 pt-1">
                     <Button
                       type="button"
@@ -242,6 +341,10 @@ export default function Holdings() {
                           name: "",
                           category: "equity",
                           initialNav: "",
+                          amc: "",
+                          customAmc: "",
+                          showAddAmc: false,
+                          fundType: "",
                         });
                       }}
                       className="flex-1"
@@ -375,10 +478,10 @@ export default function Holdings() {
                         {formatUnits(h.units)}
                       </td>
                       <td className="px-4 py-2.5 tabular-nums">
-                        \u20b9{(Number(h.avgCostNav) / 100).toFixed(2)}
+                        ₹{(Number(h.avgCostNav) / 100).toFixed(2)}
                       </td>
                       <td className="px-4 py-2.5 tabular-nums">
-                        \u20b9
+                        ₹
                         {h.fund
                           ? (Number(h.fund.currentNav) / 100).toFixed(2)
                           : "-"}

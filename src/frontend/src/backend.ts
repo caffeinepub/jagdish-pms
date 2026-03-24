@@ -235,8 +235,10 @@ export interface Holding {
 }
 export interface Fund {
     id: string;
+    amc: string;
     lastNavUpdate: Time;
     name: string;
+    fundType: string;
     category: FundCategory;
     currentNav: bigint;
 }
@@ -288,7 +290,8 @@ export enum UserRole {
 export interface backendInterface {
     _initializeAccessControlWithSecret(userSecret: string): Promise<void>;
     addCategory(category: string): Promise<void>;
-    addFund(id: string, name: string, category: FundCategory, initialNav: bigint): Promise<void>;
+    addFavoriteFund(fundId: string): Promise<void>;
+    addFund(id: string, name: string, category: FundCategory, initialNav: bigint, amc: string, fundType: string): Promise<void>;
     addTag(tag: string): Promise<void>;
     addTransaction(input: TransactionInput): Promise<void>;
     adminGetAllCapitalGains(): Promise<Array<UserCapitalGainsRecord>>;
@@ -311,6 +314,7 @@ export interface backendInterface {
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getCapitalGainsReport(): Promise<CapitalGainsReport>;
+    getFavoriteFunds(): Promise<Array<string>>;
     getHoldings(): Promise<Array<Holding>>;
     getNextPostId(): Promise<bigint>;
     getPortfolioSummary(): Promise<PortfolioSummary>;
@@ -319,7 +323,9 @@ export interface backendInterface {
     getTransactions(): Promise<Array<Transaction>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
+    isFundFavorite(fundId: string): Promise<boolean>;
     registerUser(arg0: UserRegistration): Promise<void>;
+    removeFavoriteFund(fundId: string): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     updateNav(fundId: string, newNav: bigint): Promise<void>;
     updatePost(input: UpdateBlogPostInput): Promise<void>;
@@ -357,17 +363,31 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async addFund(arg0: string, arg1: string, arg2: FundCategory, arg3: bigint): Promise<void> {
+    async addFavoriteFund(arg0: string): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.addFund(arg0, arg1, to_candid_FundCategory_n1(this._uploadFile, this._downloadFile, arg2), arg3);
+                const result = await this.actor.addFavoriteFund(arg0);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.addFund(arg0, arg1, to_candid_FundCategory_n1(this._uploadFile, this._downloadFile, arg2), arg3);
+            const result = await this.actor.addFavoriteFund(arg0);
+            return result;
+        }
+    }
+    async addFund(arg0: string, arg1: string, arg2: FundCategory, arg3: bigint, arg4: string, arg5: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.addFund(arg0, arg1, to_candid_FundCategory_n1(this._uploadFile, this._downloadFile, arg2), arg3, arg4, arg5);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.addFund(arg0, arg1, to_candid_FundCategory_n1(this._uploadFile, this._downloadFile, arg2), arg3, arg4, arg5);
             return result;
         }
     }
@@ -679,6 +699,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async getFavoriteFunds(): Promise<Array<string>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getFavoriteFunds();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getFavoriteFunds();
+            return result;
+        }
+    }
     async getHoldings(): Promise<Array<Holding>> {
         if (this.processError) {
             try {
@@ -791,6 +825,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async isFundFavorite(arg0: string): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.isFundFavorite(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.isFundFavorite(arg0);
+            return result;
+        }
+    }
     async registerUser(arg0: UserRegistration): Promise<void> {
         if (this.processError) {
             try {
@@ -802,6 +850,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.registerUser(arg0);
+            return result;
+        }
+    }
+    async removeFavoriteFund(arg0: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.removeFavoriteFund(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.removeFavoriteFund(arg0);
             return result;
         }
     }
@@ -995,21 +1057,27 @@ function from_candid_record_n23(_uploadFile: (file: ExternalBlob) => Promise<Uin
 }
 function from_candid_record_n28(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     id: string;
+    amc: string;
     lastNavUpdate: _Time;
     name: string;
+    fundType: string;
     category: _FundCategory;
     currentNav: bigint;
 }): {
     id: string;
+    amc: string;
     lastNavUpdate: Time;
     name: string;
+    fundType: string;
     category: FundCategory;
     currentNav: bigint;
 } {
     return {
         id: value.id,
+        amc: value.amc,
         lastNavUpdate: value.lastNavUpdate,
         name: value.name,
+        fundType: value.fundType,
         category: from_candid_FundCategory_n29(_uploadFile, _downloadFile, value.category),
         currentNav: value.currentNav
     };

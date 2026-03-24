@@ -42,8 +42,10 @@ export interface CreateBlogPostInput {
 }
 export interface Fund {
   'id' : string,
+  'amc' : string,
   'lastNavUpdate' : Time,
   'name' : string,
+  'fundType' : string,
   'category' : FundCategory,
   'currentNav' : bigint,
 }
@@ -198,7 +200,11 @@ export interface UserTransactionRecord {
 export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'addCategory' : ActorMethod<[string], undefined>,
-  'addFund' : ActorMethod<[string, string, FundCategory, bigint], undefined>,
+  'addFavoriteFund' : ActorMethod<[string], undefined>,
+  'addFund' : ActorMethod<
+    [string, string, FundCategory, bigint, string, string],
+    undefined
+  >,
   'addTag' : ActorMethod<[string], undefined>,
   'addTransaction' : ActorMethod<[TransactionInput], undefined>,
   'adminGetAllCapitalGains' : ActorMethod<[], Array<UserCapitalGainsRecord>>,
@@ -221,6 +227,7 @@ export interface _SERVICE {
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getCapitalGainsReport' : ActorMethod<[], CapitalGainsReport>,
+  'getFavoriteFunds' : ActorMethod<[], Array<string>>,
   'getHoldings' : ActorMethod<[], Array<Holding>>,
   'getNextPostId' : ActorMethod<[], bigint>,
   'getPortfolioSummary' : ActorMethod<[], PortfolioSummary>,
@@ -229,7 +236,9 @@ export interface _SERVICE {
   'getTransactions' : ActorMethod<[], Array<Transaction>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
+  'isFundFavorite' : ActorMethod<[string], boolean>,
   'registerUser' : ActorMethod<[UserRegistration], undefined>,
+  'removeFavoriteFund' : ActorMethod<[string], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'updateNav' : ActorMethod<[string, bigint], undefined>,
   'updatePost' : ActorMethod<[UpdateBlogPostInput], undefined>,

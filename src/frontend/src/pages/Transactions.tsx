@@ -18,16 +18,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Download, Plus } from "lucide-react";
+import { Download, Plus, Star } from "lucide-react";
 import { motion } from "motion/react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
   type TransactionInput,
   type TransactionType,
+  useAddFavoriteFund,
   useAddTransaction,
   useGetAllFunds,
+  useGetFavoriteFunds,
   useGetTransactions,
+  useRemoveFavoriteFund,
 } from "../hooks/useQueries";
 import { exportToCSV } from "../utils/exportCsv";
 import {
@@ -38,7 +41,7 @@ import {
   transactionLabel,
 } from "../utils/format";
 
-const INDIAN_AMCS = [
+export const INDIAN_AMCS = [
   "Aditya Birla Sun Life MF",
   "Axis MF",
   "Bandhan MF",
@@ -75,6 +78,21 @@ const INDIAN_AMCS = [
   "Zerodha MF (Nifty)",
 ];
 
+const FUND_TYPES = [
+  "Growth",
+  "Dividend",
+  "IDCW",
+  "Direct Growth",
+  "Direct Dividend",
+];
+
+const CATEGORY_LABELS: Record<string, string> = {
+  equity: "Equity",
+  debt: "Debt",
+  hybrid: "Hybrid",
+  elss: "ELSS",
+};
+
 const txBadgeColors: Record<string, string> = {
   buy: "bg-blue-100 text-blue-700",
   sip: "bg-purple-100 text-purple-700",
@@ -84,6 +102,11 @@ const txBadgeColors: Record<string, string> = {
 const emptyForm = {
   fundId: "",
   type: "buy",
+  // Cascade state
+  cascadeAmc: "",
+  cascadeCategory: "",
+  cascadeName: "",
+  cascadeType: "",
   // Core - optional
   units: "",
   nav: "",
@@ -120,10 +143,16 @@ function SectionHeading({ label }: { label: string }) {
 export default function Transactions() {
   const { data: txs, isLoading } = useGetTransactions();
   const { data: funds } = useGetAllFunds();
+  const { data: favIds = [], refetch: refetchFavs } = useGetFavoriteFunds();
   const addTransaction = useAddTransaction();
+  const addFav = useAddFavoriteFund();
+  const removeFav = useRemoveFavoriteFund();
 
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<FormState>(emptyForm);
+  // Local optimistic favorites
+  const [localFavIds, setLocalFavIds] = useState<string[] | null>(null);
+  const effectiveFavIds = localFavIds ?? favIds;
 
   const set = (patch: Partial<FormState>) =>
     setForm((prev) => ({ ...prev, ...patch }));
@@ -133,10 +162,142 @@ export default function Transactions() {
     [txs],
   );
 
+  // ── Cascade derived options ───────────────────────────────────────────────
+
+  // Unique AMCs from funds (from fund data) + INDIAN_AMCS fallback
+  const allFunds = funds ?? [];
+
+  const amcOptions = useMemo(() => {
+    const fromFunds = allFunds
+      .map((f) => f.amc)
+      .filter((a): a is string => !!a && a.length > 0);
+    const merged = Array.from(new Set([...INDIAN_AMCS, ...fromFunds])).sort();
+    return merged;
+  }, [allFunds]);
+
+  const categoryOptions = useMemo(() => {
+    const filtered = form.cascadeAmc
+      ? allFunds.filter((f) => f.amc === form.cascadeAmc)
+      : allFunds;
+    const cats = Array.from(new Set(filtered.map((f) => String(f.category))));
+    return cats.sort();
+  }, [allFunds, form.cascadeAmc]);
+
+  const nameOptions = useMemo(() => {
+    let filtered = allFunds;
+    if (form.cascadeAmc)
+      filtered = filtered.filter((f) => f.amc === form.cascadeAmc);
+    if (form.cascadeCategory)
+      filtered = filtered.filter(
+        (f) => String(f.category) === form.cascadeCategory,
+      );
+    const names = Array.from(new Set(filtered.map((f) => f.name))).sort();
+    return names;
+  }, [allFunds, form.cascadeAmc, form.cascadeCategory]);
+
+  const typeOptions = useMemo(() => {
+    if (!form.cascadeName) return [];
+    const matching = allFunds.filter((f) => f.name === form.cascadeName);
+    const types = Array.from(
+      new Set(
+        matching
+          .map((f) => f.fundType)
+          .filter((t): t is string => !!t && t.length > 0),
+      ),
+    );
+    return types.length > 0 ? types : FUND_TYPES;
+  }, [allFunds, form.cascadeName]);
+
+  // ── Cascade handlers ─────────────────────────────────────────────────────
+
+  const handleCascadeAmc = (amc: string) => {
+    set({
+      cascadeAmc: amc,
+      cascadeCategory: "",
+      cascadeName: "",
+      cascadeType: "",
+      fundId: "",
+      amc,
+    });
+  };
+
+  const handleCascadeCategory = (cat: string) => {
+    set({ cascadeCategory: cat, cascadeName: "", cascadeType: "", fundId: "" });
+  };
+
+  const handleCascadeName = (name: string) => {
+    // Find the fund by name (pick first match if multiple types)
+    const matching = allFunds.filter(
+      (f) =>
+        f.name === name &&
+        (!form.cascadeAmc || f.amc === form.cascadeAmc) &&
+        (!form.cascadeCategory || String(f.category) === form.cascadeCategory),
+    );
+    if (matching.length === 1) {
+      // Auto-select: only one fund with this name
+      set({
+        cascadeName: name,
+        cascadeType: matching[0].fundType ?? "",
+        fundId: matching[0].id,
+      });
+    } else {
+      // Multiple types available — wait for type selection
+      set({ cascadeName: name, cascadeType: "", fundId: "" });
+    }
+  };
+
+  const handleCascadeType = (type: string) => {
+    const fund = allFunds.find(
+      (f) =>
+        f.name === form.cascadeName &&
+        f.fundType === type &&
+        (!form.cascadeAmc || f.amc === form.cascadeAmc),
+    );
+    set({ cascadeType: type, fundId: fund?.id ?? "" });
+  };
+
+  // ── Favorites ────────────────────────────────────────────────────────────
+
+  const handleSelectFavorite = (fundId: string) => {
+    const fund = allFunds.find((f) => f.id === fundId);
+    if (!fund) return;
+    set({
+      fundId,
+      cascadeAmc: fund.amc ?? "",
+      cascadeCategory: String(fund.category),
+      cascadeName: fund.name,
+      cascadeType: fund.fundType ?? "",
+      amc: fund.amc ?? "",
+    });
+  };
+
+  const handleToggleFavorite = async (fundId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const isFav = effectiveFavIds.includes(fundId);
+    // Optimistic update
+    setLocalFavIds(
+      isFav
+        ? effectiveFavIds.filter((id) => id !== fundId)
+        : [...effectiveFavIds, fundId],
+    );
+    try {
+      if (isFav) {
+        await removeFav.mutateAsync(fundId);
+      } else {
+        await addFav.mutateAsync(fundId);
+      }
+      refetchFavs();
+      setLocalFavIds(null);
+    } catch {
+      setLocalFavIds(null);
+      toast.error("Failed to update favorites");
+    }
+  };
+
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.fundId) {
-      toast.error("Please select a fund");
+      toast.error("Please select a fund using the dropdowns above");
       return;
     }
 
@@ -254,6 +415,12 @@ export default function Transactions() {
     "Payment",
   ];
 
+  // Favorites data for display
+  const favFunds = useMemo(
+    () => allFunds.filter((f) => effectiveFavIds.includes(f.id)),
+    [allFunds, effectiveFavIds],
+  );
+
   return (
     <div className="space-y-6">
       <div className="page-header-divider flex items-start justify-between">
@@ -293,28 +460,276 @@ export default function Transactions() {
                 <SectionHeading label="Basic Info" />
 
                 <div className="space-y-3">
+                  {/* ── Fund Selector ─────────────────────────── */}
                   <div>
                     <Label>
                       Fund <span className="text-destructive">*</span>
                     </Label>
-                    <Select
-                      value={form.fundId}
-                      onValueChange={(v) => set({ fundId: v })}
-                    >
-                      <SelectTrigger
-                        data-ocid="transactions.fund.select"
-                        className="mt-1"
+
+                    {/* Favorites dropdown */}
+                    <div className="mt-2">
+                      <p className="text-[11px] text-muted-foreground mb-1 font-medium flex items-center gap-1">
+                        <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                        Favorites (quick pick)
+                      </p>
+                      <Select
+                        value={
+                          favFunds.some((f) => f.id === form.fundId)
+                            ? form.fundId
+                            : ""
+                        }
+                        onValueChange={(val) => {
+                          if (val) handleSelectFavorite(val);
+                        }}
                       >
-                        <SelectValue placeholder="Select fund" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {(funds ?? []).map((f) => (
-                          <SelectItem key={f.id} value={f.id}>
-                            {f.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                        <SelectTrigger
+                          data-ocid="transactions.favorites.select"
+                          className="text-xs h-8 border-amber-200 focus:ring-amber-300"
+                        >
+                          <SelectValue
+                            placeholder={
+                              favFunds.length === 0
+                                ? "No favorites yet — star a fund below"
+                                : "Select a favorite fund..."
+                            }
+                          />
+                        </SelectTrigger>
+                        {favFunds.length > 0 && (
+                          <SelectContent>
+                            {favFunds.map((f) => (
+                              <SelectItem
+                                key={f.id}
+                                value={f.id}
+                                className="text-xs"
+                              >
+                                <span className="flex items-center gap-1.5">
+                                  <Star className="w-3 h-3 fill-amber-400 text-amber-400 flex-shrink-0" />
+                                  {f.name}
+                                  {f.fundType && (
+                                    <span className="ml-1 px-1.5 py-0.5 rounded text-[10px] bg-amber-50 text-amber-700 border border-amber-200">
+                                      {f.fundType}
+                                    </span>
+                                  )}
+                                </span>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        )}
+                      </Select>
+                    </div>
+
+                    {/* Cascade grid */}
+                    <div className="mt-2 grid grid-cols-2 gap-2">
+                      {/* Step 1: AMC */}
+                      <div>
+                        <p className="text-[11px] text-muted-foreground mb-1 font-medium">
+                          1. AMC
+                        </p>
+                        <Select
+                          value={form.cascadeAmc}
+                          onValueChange={handleCascadeAmc}
+                        >
+                          <SelectTrigger
+                            data-ocid="transactions.cascade_amc.select"
+                            className="text-xs h-8"
+                          >
+                            <SelectValue placeholder="All AMCs" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {amcOptions.map((amc) => (
+                              <SelectItem
+                                key={amc}
+                                value={amc}
+                                className="text-xs"
+                              >
+                                {amc}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Step 2: Category */}
+                      <div>
+                        <p className="text-[11px] text-muted-foreground mb-1 font-medium">
+                          2. Category
+                        </p>
+                        <Select
+                          value={form.cascadeCategory}
+                          onValueChange={handleCascadeCategory}
+                          disabled={categoryOptions.length === 0}
+                        >
+                          <SelectTrigger
+                            data-ocid="transactions.cascade_category.select"
+                            className="text-xs h-8"
+                          >
+                            <SelectValue
+                              placeholder={
+                                !form.cascadeAmc
+                                  ? "Select AMC first"
+                                  : "All Categories"
+                              }
+                            />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {categoryOptions.map((cat) => (
+                              <SelectItem
+                                key={cat}
+                                value={cat}
+                                className="text-xs"
+                              >
+                                {CATEGORY_LABELS[cat] ?? cat}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Step 3: MF Name */}
+                      <div className="col-span-2">
+                        <p className="text-[11px] text-muted-foreground mb-1 font-medium">
+                          3. Fund Name
+                        </p>
+                        <Select
+                          value={form.cascadeName}
+                          onValueChange={handleCascadeName}
+                          disabled={nameOptions.length === 0}
+                        >
+                          <SelectTrigger
+                            data-ocid="transactions.cascade_name.select"
+                            className="text-xs h-8"
+                          >
+                            <SelectValue
+                              placeholder={
+                                !form.cascadeAmc
+                                  ? "Select AMC first"
+                                  : !form.cascadeCategory
+                                    ? "Select Category first"
+                                    : "Select Fund Name"
+                              }
+                            />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {nameOptions.map((name) => {
+                              const fundForName = allFunds.find(
+                                (f) => f.name === name,
+                              );
+                              const isFav = fundForName
+                                ? effectiveFavIds.includes(fundForName.id)
+                                : false;
+                              return (
+                                <SelectItem
+                                  key={name}
+                                  value={name}
+                                  className="text-xs pr-8 relative"
+                                >
+                                  <span className="flex items-center gap-1.5">
+                                    {name}
+                                    {fundForName && (
+                                      <button
+                                        type="button"
+                                        data-ocid="transactions.fund_star.toggle"
+                                        className="ml-auto p-0 border-0 bg-transparent cursor-pointer"
+                                        onClick={(e) =>
+                                          handleToggleFavorite(
+                                            fundForName.id,
+                                            e,
+                                          )
+                                        }
+                                        onKeyDown={(e) => {
+                                          if (
+                                            e.key === "Enter" ||
+                                            e.key === " "
+                                          ) {
+                                            e.stopPropagation();
+                                            handleToggleFavorite(
+                                              fundForName.id,
+                                              e as unknown as React.MouseEvent,
+                                            );
+                                          }
+                                        }}
+                                        aria-label={
+                                          isFav
+                                            ? "Remove from favorites"
+                                            : "Add to favorites"
+                                        }
+                                      >
+                                        <Star
+                                          className={`w-3 h-3 ${
+                                            isFav
+                                              ? "fill-amber-400 text-amber-400"
+                                              : "text-slate-300 hover:text-amber-400"
+                                          }`}
+                                        />
+                                      </button>
+                                    )}
+                                  </span>
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Step 4: Type */}
+                      <div className="col-span-2">
+                        <p className="text-[11px] text-muted-foreground mb-1 font-medium">
+                          4. Type (Growth / Dividend)
+                        </p>
+                        <Select
+                          value={form.cascadeType}
+                          onValueChange={handleCascadeType}
+                          disabled={!form.cascadeName}
+                        >
+                          <SelectTrigger
+                            data-ocid="transactions.cascade_type.select"
+                            className="text-xs h-8"
+                          >
+                            <SelectValue
+                              placeholder={
+                                !form.cascadeName
+                                  ? "Select Fund Name first"
+                                  : "Select Type"
+                              }
+                            />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {typeOptions.map((type) => (
+                              <SelectItem
+                                key={type}
+                                value={type}
+                                className="text-xs"
+                              >
+                                {type}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    {/* Selected fund indicator */}
+                    {form.fundId && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mt-2 flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md px-2.5 py-1.5"
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                        <span className="font-medium">
+                          {allFunds.find((f) => f.id === form.fundId)?.name ??
+                            form.fundId}
+                        </span>
+                        {form.cascadeType && (
+                          <Badge
+                            variant="outline"
+                            className="ml-auto text-[10px] h-4 px-1.5"
+                          >
+                            {form.cascadeType}
+                          </Badge>
+                        )}
+                      </motion.div>
+                    )}
                   </div>
 
                   <div>
