@@ -1,23 +1,18 @@
 # Jagdish PMS
 
 ## Current State
-Favorites are implemented as quick-pick pill buttons above the cascading fund selector (AMC → Category → MF Name → Type). Clicking a pill fills all four cascade dropdowns at once.
+The `isCallerAdmin` query function is declared in the backend DID interface and TypeScript types, but is missing from the actual Motoko backend code (`main.mo`). This causes the frontend's `useIsCallerAdmin` hook to call a non-existent function, resulting in the admin check silently failing. Since `isAdmin` is always falsy, the Add Fund button in Holdings is never shown to any user (even real admins).
 
 ## Requested Changes (Diff)
 
 ### Add
-- A proper "Favorites" `<Select>` dropdown as the fifth/top entry point in the fund selector, placed above the four cascade dropdowns.
+- `isCallerAdmin` public query function in `main.mo` that returns `true` if the caller is an admin, `false` otherwise (including anonymous callers)
 
 ### Modify
-- Replace the favorites pills row with a labeled `<Select>` dropdown showing only the user's starred funds.
-- The dropdown shows a placeholder "No favorites yet — star a fund below" when empty, and "Select a favorite fund..." when funds are starred.
-- Selecting a fund from the Favorites dropdown fills all four cascade dropdowns (AMC, Category, Name, Type) and sets fundId — same behavior as the old pills.
-- Each option in the dropdown shows the fund name + fund type badge.
+- Nothing else changes
 
 ### Remove
-- The pills/button row for favorites.
+- Nothing
 
 ## Implementation Plan
-1. In Transactions.tsx, replace the favorites pills block with a `<Select>` / `<SelectTrigger>` / `<SelectContent>` dropdown.
-2. Reuse the existing `handleSelectFavorite` handler on `onValueChange`.
-3. Keep star toggle buttons inside the Step 3 (Fund Name) dropdown unchanged — users still star funds from there.
+1. Insert `isCallerAdmin` query function into `main.mo` after `bootstrapFirstAdmin` -- already done via sed
