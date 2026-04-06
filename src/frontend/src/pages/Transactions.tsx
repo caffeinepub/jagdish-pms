@@ -557,7 +557,7 @@ export default function Transactions() {
                         <Select
                           value={form.cascadeCategory}
                           onValueChange={handleCascadeCategory}
-                          disabled={categoryOptions.length === 0}
+                          disabled={!form.cascadeAmc}
                         >
                           <SelectTrigger
                             data-ocid="transactions.cascade_category.select"
@@ -572,15 +572,25 @@ export default function Transactions() {
                             />
                           </SelectTrigger>
                           <SelectContent>
-                            {categoryOptions.map((cat) => (
+                            {categoryOptions.length === 0 ? (
                               <SelectItem
-                                key={cat}
-                                value={cat}
-                                className="text-xs"
+                                value="__no_options__"
+                                disabled
+                                className="text-xs text-muted-foreground"
                               >
-                                {CATEGORY_LABELS[cat] ?? cat}
+                                No categories found — add funds via Holdings
                               </SelectItem>
-                            ))}
+                            ) : (
+                              categoryOptions.map((cat) => (
+                                <SelectItem
+                                  key={cat}
+                                  value={cat}
+                                  className="text-xs"
+                                >
+                                  {CATEGORY_LABELS[cat] ?? cat}
+                                </SelectItem>
+                              ))
+                            )}
                           </SelectContent>
                         </Select>
                       </div>
@@ -593,7 +603,7 @@ export default function Transactions() {
                         <Select
                           value={form.cascadeName}
                           onValueChange={handleCascadeName}
-                          disabled={nameOptions.length === 0}
+                          disabled={!form.cascadeAmc}
                         >
                           <SelectTrigger
                             data-ocid="transactions.cascade_name.select"
@@ -610,63 +620,73 @@ export default function Transactions() {
                             />
                           </SelectTrigger>
                           <SelectContent>
-                            {nameOptions.map((name) => {
-                              const fundForName = allFunds.find(
-                                (f) => f.name === name,
-                              );
-                              const isFav = fundForName
-                                ? effectiveFavIds.includes(fundForName.id)
-                                : false;
-                              return (
-                                <SelectItem
-                                  key={name}
-                                  value={name}
-                                  className="text-xs pr-8 relative"
-                                >
-                                  <span className="flex items-center gap-1.5">
-                                    {name}
-                                    {fundForName && (
-                                      <button
-                                        type="button"
-                                        data-ocid="transactions.fund_star.toggle"
-                                        className="ml-auto p-0 border-0 bg-transparent cursor-pointer"
-                                        onClick={(e) =>
-                                          handleToggleFavorite(
-                                            fundForName.id,
-                                            e,
-                                          )
-                                        }
-                                        onKeyDown={(e) => {
-                                          if (
-                                            e.key === "Enter" ||
-                                            e.key === " "
-                                          ) {
-                                            e.stopPropagation();
+                            {nameOptions.length === 0 ? (
+                              <SelectItem
+                                value="__no_funds__"
+                                disabled
+                                className="text-xs text-muted-foreground"
+                              >
+                                No funds found — add funds via Holdings tab
+                              </SelectItem>
+                            ) : (
+                              nameOptions.map((name) => {
+                                const fundForName = allFunds.find(
+                                  (f) => f.name === name,
+                                );
+                                const isFav = fundForName
+                                  ? effectiveFavIds.includes(fundForName.id)
+                                  : false;
+                                return (
+                                  <SelectItem
+                                    key={name}
+                                    value={name}
+                                    className="text-xs pr-8 relative"
+                                  >
+                                    <span className="flex items-center gap-1.5">
+                                      {name}
+                                      {fundForName && (
+                                        <button
+                                          type="button"
+                                          data-ocid="transactions.fund_star.toggle"
+                                          className="ml-auto p-0 border-0 bg-transparent cursor-pointer"
+                                          onClick={(e) =>
                                             handleToggleFavorite(
                                               fundForName.id,
-                                              e as unknown as React.MouseEvent,
-                                            );
+                                              e,
+                                            )
                                           }
-                                        }}
-                                        aria-label={
-                                          isFav
-                                            ? "Remove from favorites"
-                                            : "Add to favorites"
-                                        }
-                                      >
-                                        <Star
-                                          className={`w-3 h-3 ${
+                                          onKeyDown={(e) => {
+                                            if (
+                                              e.key === "Enter" ||
+                                              e.key === " "
+                                            ) {
+                                              e.stopPropagation();
+                                              handleToggleFavorite(
+                                                fundForName.id,
+                                                e as unknown as React.MouseEvent,
+                                              );
+                                            }
+                                          }}
+                                          aria-label={
                                             isFav
-                                              ? "fill-amber-400 text-amber-400"
-                                              : "text-slate-300 hover:text-amber-400"
-                                          }`}
-                                        />
-                                      </button>
-                                    )}
-                                  </span>
-                                </SelectItem>
-                              );
-                            })}
+                                              ? "Remove from favorites"
+                                              : "Add to favorites"
+                                          }
+                                        >
+                                          <Star
+                                            className={`w-3 h-3 ${
+                                              isFav
+                                                ? "fill-amber-400 text-amber-400"
+                                                : "text-slate-300 hover:text-amber-400"
+                                            }`}
+                                          />
+                                        </button>
+                                      )}
+                                    </span>
+                                  </SelectItem>
+                                );
+                              })
+                            )}
                           </SelectContent>
                         </Select>
                       </div>

@@ -24,6 +24,7 @@ import {
   useAddFund,
   useGetAllFunds,
   useGetCallerUserProfile,
+  useIsCallerAdmin,
 } from "./hooks/useQueries";
 import AdminUsers from "./pages/AdminUsers";
 import AdvancedFeatures from "./pages/AdvancedFeatures";
@@ -50,53 +51,625 @@ import StepUpSipCalculatorPage from "./pages/public/StepUpSipCalculatorPage";
 const queryClient = new QueryClient();
 
 const SEED_FUNDS = [
+  // HDFC MF
   {
-    id: "hdfc-equity",
+    id: "hdfc-equity-fund",
     name: "HDFC Equity Fund",
+    amc: "HDFC MF",
     category: FundCategory.equity,
-    initialNav: 62500n,
+    fundType: "Growth",
+    initialNav: 85000n,
   },
   {
-    id: "sbi-bluechip",
-    name: "SBI Bluechip Fund",
+    id: "hdfc-flexi-cap-fund",
+    name: "HDFC Flexi Cap Fund",
+    amc: "HDFC MF",
     category: FundCategory.equity,
-    initialNav: 48200n,
+    fundType: "Growth",
+    initialNav: 162000n,
   },
   {
-    id: "icici-debt",
-    name: "ICICI Prudential Debt Fund",
+    id: "hdfc-mid-cap-opportunities-fund",
+    name: "HDFC Mid-Cap Opportunities Fund",
+    amc: "HDFC MF",
+    category: FundCategory.equity,
+    fundType: "Growth",
+    initialNav: 135000n,
+  },
+  {
+    id: "hdfc-small-cap-fund",
+    name: "HDFC Small Cap Fund",
+    amc: "HDFC MF",
+    category: FundCategory.equity,
+    fundType: "Growth",
+    initialNav: 11800n,
+  },
+  {
+    id: "hdfc-balanced-advantage-fund",
+    name: "HDFC Balanced Advantage Fund",
+    amc: "HDFC MF",
+    category: FundCategory.hybrid,
+    fundType: "Growth",
+    initialNav: 42500n,
+  },
+  {
+    id: "hdfc-short-duration-debt-fund",
+    name: "HDFC Short Duration Debt Fund",
+    amc: "HDFC MF",
     category: FundCategory.debt,
-    initialNav: 24300n,
+    fundType: "Growth",
+    initialNav: 2800n,
   },
   {
-    id: "axis-elss",
-    name: "Axis Long Term Equity (ELSS)",
+    id: "hdfc-liquid-fund",
+    name: "HDFC Liquid Fund",
+    amc: "HDFC MF",
+    category: FundCategory.debt,
+    fundType: "Growth",
+    initialNav: 450000n,
+  },
+  {
+    id: "hdfc-tax-saver-elss",
+    name: "HDFC Tax Saver (ELSS)",
+    amc: "HDFC MF",
     category: FundCategory.elss,
-    initialNav: 35800n,
+    fundType: "Growth",
+    initialNav: 94000n,
+  },
+
+  // SBI MF
+  {
+    id: "sbi-bluechip-fund",
+    name: "SBI Bluechip Fund",
+    amc: "SBI MF",
+    category: FundCategory.equity,
+    fundType: "Growth",
+    initialNav: 68000n,
+  },
+  {
+    id: "sbi-magnum-midcap-fund",
+    name: "SBI Magnum Midcap Fund",
+    amc: "SBI MF",
+    category: FundCategory.equity,
+    fundType: "Growth",
+    initialNav: 21000n,
+  },
+  {
+    id: "sbi-small-cap-fund",
+    name: "SBI Small Cap Fund",
+    amc: "SBI MF",
+    category: FundCategory.equity,
+    fundType: "Growth",
+    initialNav: 14500n,
+  },
+  {
+    id: "sbi-contra-fund",
+    name: "SBI Contra Fund",
+    amc: "SBI MF",
+    category: FundCategory.equity,
+    fundType: "Growth",
+    initialNav: 32000n,
+  },
+  {
+    id: "sbi-equity-hybrid-fund",
+    name: "SBI Equity Hybrid Fund",
+    amc: "SBI MF",
+    category: FundCategory.hybrid,
+    fundType: "Growth",
+    initialNav: 23500n,
+  },
+  {
+    id: "sbi-debt-fund",
+    name: "SBI Debt Fund",
+    amc: "SBI MF",
+    category: FundCategory.debt,
+    fundType: "Growth",
+    initialNav: 3100n,
+  },
+  {
+    id: "sbi-liquid-fund",
+    name: "SBI Liquid Fund",
+    amc: "SBI MF",
+    category: FundCategory.debt,
+    fundType: "Growth",
+    initialNav: 380000n,
+  },
+  {
+    id: "sbi-long-term-equity-fund-elss",
+    name: "SBI Long Term Equity Fund (ELSS)",
+    amc: "SBI MF",
+    category: FundCategory.elss,
+    fundType: "Growth",
+    initialNav: 38000n,
+  },
+
+  // ICICI Prudential MF
+  {
+    id: "icici-prudential-bluechip-fund",
+    name: "ICICI Prudential Bluechip Fund",
+    amc: "ICICI Prudential MF",
+    category: FundCategory.equity,
+    fundType: "Growth",
+    initialNav: 102000n,
+  },
+  {
+    id: "icici-prudential-midcap-fund",
+    name: "ICICI Prudential Midcap Fund",
+    amc: "ICICI Prudential MF",
+    category: FundCategory.equity,
+    fundType: "Growth",
+    initialNav: 25000n,
+  },
+  {
+    id: "icici-prudential-balanced-advantage-fund",
+    name: "ICICI Prudential Balanced Advantage Fund",
+    amc: "ICICI Prudential MF",
+    category: FundCategory.hybrid,
+    fundType: "Growth",
+    initialNav: 69000n,
+  },
+  {
+    id: "icici-prudential-short-term-fund",
+    name: "ICICI Prudential Short Term Fund",
+    amc: "ICICI Prudential MF",
+    category: FundCategory.debt,
+    fundType: "Growth",
+    initialNav: 5400n,
+  },
+  {
+    id: "icici-prudential-liquid-fund",
+    name: "ICICI Prudential Liquid Fund",
+    amc: "ICICI Prudential MF",
+    category: FundCategory.debt,
+    fundType: "Growth",
+    initialNav: 420000n,
+  },
+  {
+    id: "icici-prudential-long-term-equity-fund-elss",
+    name: "ICICI Prudential Long Term Equity Fund (ELSS)",
+    amc: "ICICI Prudential MF",
+    category: FundCategory.elss,
+    fundType: "Growth",
+    initialNav: 82000n,
+  },
+  {
+    id: "icici-prudential-value-discovery-fund",
+    name: "ICICI Prudential Value Discovery Fund",
+    amc: "ICICI Prudential MF",
+    category: FundCategory.equity,
+    fundType: "Growth",
+    initialNav: 48000n,
+  },
+
+  // Nippon India MF
+  {
+    id: "nippon-india-large-cap-fund",
+    name: "Nippon India Large Cap Fund",
+    amc: "Nippon India MF",
+    category: FundCategory.equity,
+    fundType: "Growth",
+    initialNav: 79000n,
+  },
+  {
+    id: "nippon-india-growth-fund",
+    name: "Nippon India Growth Fund",
+    amc: "Nippon India MF",
+    category: FundCategory.equity,
+    fundType: "Growth",
+    initialNav: 390000n,
+  },
+  {
+    id: "nippon-india-small-cap-fund",
+    name: "Nippon India Small Cap Fund",
+    amc: "Nippon India MF",
+    category: FundCategory.equity,
+    fundType: "Growth",
+    initialNav: 17200n,
+  },
+  {
+    id: "nippon-india-liquid-fund",
+    name: "Nippon India Liquid Fund",
+    amc: "Nippon India MF",
+    category: FundCategory.debt,
+    fundType: "Growth",
+    initialNav: 610000n,
+  },
+  {
+    id: "nippon-india-tax-saver-elss",
+    name: "Nippon India Tax Saver (ELSS)",
+    amc: "Nippon India MF",
+    category: FundCategory.elss,
+    fundType: "Growth",
+    initialNav: 12500n,
+  },
+  {
+    id: "nippon-india-hybrid-equity-fund",
+    name: "Nippon India Hybrid Equity Fund",
+    amc: "Nippon India MF",
+    category: FundCategory.hybrid,
+    fundType: "Growth",
+    initialNav: 8700n,
+  },
+
+  // Axis MF
+  {
+    id: "axis-bluechip-fund",
+    name: "Axis Bluechip Fund",
+    amc: "Axis MF",
+    category: FundCategory.equity,
+    fundType: "Growth",
+    initialNav: 56000n,
+  },
+  {
+    id: "axis-midcap-fund",
+    name: "Axis Midcap Fund",
+    amc: "Axis MF",
+    category: FundCategory.equity,
+    fundType: "Growth",
+    initialNav: 11200n,
+  },
+  {
+    id: "axis-small-cap-fund",
+    name: "Axis Small Cap Fund",
+    amc: "Axis MF",
+    category: FundCategory.equity,
+    fundType: "Growth",
+    initialNav: 8900n,
+  },
+  {
+    id: "axis-long-term-equity-fund-elss",
+    name: "Axis Long Term Equity Fund (ELSS)",
+    amc: "Axis MF",
+    category: FundCategory.elss,
+    fundType: "Growth",
+    initialNav: 7800n,
+  },
+  {
+    id: "axis-focused-25-fund",
+    name: "Axis Focused 25 Fund",
+    amc: "Axis MF",
+    category: FundCategory.equity,
+    fundType: "Growth",
+    initialNav: 4600n,
+  },
+  {
+    id: "axis-liquid-fund",
+    name: "Axis Liquid Fund",
+    amc: "Axis MF",
+    category: FundCategory.debt,
+    fundType: "Growth",
+    initialNav: 230000n,
+  },
+
+  // Mirae Asset MF
+  {
+    id: "mirae-asset-large-cap-fund",
+    name: "Mirae Asset Large Cap Fund",
+    amc: "Mirae Asset MF",
+    category: FundCategory.equity,
+    fundType: "Growth",
+    initialNav: 110000n,
+  },
+  {
+    id: "mirae-asset-emerging-bluechip-fund",
+    name: "Mirae Asset Emerging Bluechip Fund",
+    amc: "Mirae Asset MF",
+    category: FundCategory.equity,
+    fundType: "Growth",
+    initialNav: 14500n,
+  },
+  {
+    id: "mirae-asset-midcap-fund",
+    name: "Mirae Asset Midcap Fund",
+    amc: "Mirae Asset MF",
+    category: FundCategory.equity,
+    fundType: "Growth",
+    initialNav: 3200n,
+  },
+  {
+    id: "mirae-asset-tax-saver-fund-elss",
+    name: "Mirae Asset Tax Saver Fund (ELSS)",
+    amc: "Mirae Asset MF",
+    category: FundCategory.elss,
+    fundType: "Growth",
+    initialNav: 4100n,
+  },
+  {
+    id: "mirae-asset-hybrid-equity-fund",
+    name: "Mirae Asset Hybrid Equity Fund",
+    amc: "Mirae Asset MF",
+    category: FundCategory.hybrid,
+    fundType: "Growth",
+    initialNav: 2800n,
+  },
+  {
+    id: "mirae-asset-liquid-fund",
+    name: "Mirae Asset Liquid Fund",
+    amc: "Mirae Asset MF",
+    category: FundCategory.debt,
+    fundType: "Growth",
+    initialNav: 150000n,
+  },
+
+  // Kotak MF
+  {
+    id: "kotak-flexicap-fund",
+    name: "Kotak Flexicap Fund",
+    amc: "Kotak MF",
+    category: FundCategory.equity,
+    fundType: "Growth",
+    initialNav: 78000n,
+  },
+  {
+    id: "kotak-emerging-equity-fund",
+    name: "Kotak Emerging Equity Fund",
+    amc: "Kotak MF",
+    category: FundCategory.equity,
+    fundType: "Growth",
+    initialNav: 10500n,
+  },
+  {
+    id: "kotak-small-cap-fund",
+    name: "Kotak Small Cap Fund",
+    amc: "Kotak MF",
+    category: FundCategory.equity,
+    fundType: "Growth",
+    initialNav: 28000n,
+  },
+  {
+    id: "kotak-tax-saver-fund-elss",
+    name: "Kotak Tax Saver Fund (ELSS)",
+    amc: "Kotak MF",
+    category: FundCategory.elss,
+    fundType: "Growth",
+    initialNav: 9800n,
+  },
+  {
+    id: "kotak-liquid-fund",
+    name: "Kotak Liquid Fund",
+    amc: "Kotak MF",
+    category: FundCategory.debt,
+    fundType: "Growth",
+    initialNav: 490000n,
+  },
+  {
+    id: "kotak-balanced-advantage-fund",
+    name: "Kotak Balanced Advantage Fund",
+    amc: "Kotak MF",
+    category: FundCategory.hybrid,
+    fundType: "Growth",
+    initialNav: 19000n,
+  },
+
+  // DSP MF
+  {
+    id: "dsp-flexi-cap-fund",
+    name: "DSP Flexi Cap Fund",
+    amc: "DSP MF",
+    category: FundCategory.equity,
+    fundType: "Growth",
+    initialNav: 6500n,
+  },
+  {
+    id: "dsp-midcap-fund",
+    name: "DSP Midcap Fund",
+    amc: "DSP MF",
+    category: FundCategory.equity,
+    fundType: "Growth",
+    initialNav: 12500n,
+  },
+  {
+    id: "dsp-small-cap-fund",
+    name: "DSP Small Cap Fund",
+    amc: "DSP MF",
+    category: FundCategory.equity,
+    fundType: "Growth",
+    initialNav: 17800n,
+  },
+  {
+    id: "dsp-tax-saver-fund-elss",
+    name: "DSP Tax Saver Fund (ELSS)",
+    amc: "DSP MF",
+    category: FundCategory.elss,
+    fundType: "Growth",
+    initialNav: 11200n,
+  },
+  {
+    id: "dsp-liquid-fund",
+    name: "DSP Liquid Fund",
+    amc: "DSP MF",
+    category: FundCategory.debt,
+    fundType: "Growth",
+    initialNav: 340000n,
+  },
+
+  // PPFAS MF (Parag Parikh)
+  {
+    id: "parag-parikh-flexi-cap-fund",
+    name: "Parag Parikh Flexi Cap Fund",
+    amc: "PPFAS MF",
+    category: FundCategory.equity,
+    fundType: "Growth",
+    initialNav: 8600n,
+  },
+  {
+    id: "parag-parikh-conservative-hybrid-fund",
+    name: "Parag Parikh Conservative Hybrid Fund",
+    amc: "PPFAS MF",
+    category: FundCategory.hybrid,
+    fundType: "Growth",
+    initialNav: 2100n,
+  },
+  {
+    id: "parag-parikh-liquid-fund",
+    name: "Parag Parikh Liquid Fund",
+    amc: "PPFAS MF",
+    category: FundCategory.debt,
+    fundType: "Growth",
+    initialNav: 120000n,
+  },
+  {
+    id: "parag-parikh-tax-saver-fund-elss",
+    name: "Parag Parikh Tax Saver Fund (ELSS)",
+    amc: "PPFAS MF",
+    category: FundCategory.elss,
+    fundType: "Growth",
+    initialNav: 2200n,
+  },
+
+  // UTI MF
+  {
+    id: "uti-flexi-cap-fund",
+    name: "UTI Flexi Cap Fund",
+    amc: "UTI MF",
+    category: FundCategory.equity,
+    fundType: "Growth",
+    initialNav: 32500n,
+  },
+  {
+    id: "uti-nifty-50-index-fund",
+    name: "UTI Nifty 50 Index Fund",
+    amc: "UTI MF",
+    category: FundCategory.equity,
+    fundType: "Direct Growth",
+    initialNav: 14800n,
+  },
+  {
+    id: "uti-midcap-fund",
+    name: "UTI Midcap Fund",
+    amc: "UTI MF",
+    category: FundCategory.equity,
+    fundType: "Growth",
+    initialNav: 28000n,
+  },
+  {
+    id: "uti-tax-saver-fund-elss",
+    name: "UTI Tax Saver Fund (ELSS)",
+    amc: "UTI MF",
+    category: FundCategory.elss,
+    fundType: "Growth",
+    initialNav: 18500n,
+  },
+  {
+    id: "uti-liquid-fund",
+    name: "UTI Liquid Fund",
+    amc: "UTI MF",
+    category: FundCategory.debt,
+    fundType: "Growth",
+    initialNav: 410000n,
+  },
+
+  // Motilal Oswal MF
+  {
+    id: "motilal-oswal-flexi-cap-fund",
+    name: "Motilal Oswal Flexi Cap Fund",
+    amc: "Motilal Oswal MF",
+    category: FundCategory.equity,
+    fundType: "Growth",
+    initialNav: 5200n,
+  },
+  {
+    id: "motilal-oswal-midcap-fund",
+    name: "Motilal Oswal Midcap Fund",
+    amc: "Motilal Oswal MF",
+    category: FundCategory.equity,
+    fundType: "Growth",
+    initialNav: 10800n,
+  },
+  {
+    id: "motilal-oswal-nasdaq-100-fof",
+    name: "Motilal Oswal Nasdaq 100 FOF",
+    amc: "Motilal Oswal MF",
+    category: FundCategory.equity,
+    fundType: "Direct Growth",
+    initialNav: 2700n,
+  },
+  {
+    id: "motilal-oswal-sp500-index-fund",
+    name: "Motilal Oswal S&P 500 Index Fund",
+    amc: "Motilal Oswal MF",
+    category: FundCategory.equity,
+    fundType: "Direct Growth",
+    initialNav: 2200n,
+  },
+  {
+    id: "motilal-oswal-liquid-fund",
+    name: "Motilal Oswal Liquid Fund",
+    amc: "Motilal Oswal MF",
+    category: FundCategory.debt,
+    fundType: "Growth",
+    initialNav: 100000n,
+  },
+
+  // Tata MF
+  {
+    id: "tata-large-cap-fund",
+    name: "Tata Large Cap Fund",
+    amc: "Tata MF",
+    category: FundCategory.equity,
+    fundType: "Growth",
+    initialNav: 44000n,
+  },
+  {
+    id: "tata-midcap-growth-fund",
+    name: "Tata Midcap Growth Fund",
+    amc: "Tata MF",
+    category: FundCategory.equity,
+    fundType: "Growth",
+    initialNav: 38000n,
+  },
+  {
+    id: "tata-small-cap-fund",
+    name: "Tata Small Cap Fund",
+    amc: "Tata MF",
+    category: FundCategory.equity,
+    fundType: "Growth",
+    initialNav: 4800n,
+  },
+  {
+    id: "tata-equity-tax-saver-fund-elss",
+    name: "Tata Equity Tax Saver Fund (ELSS)",
+    amc: "Tata MF",
+    category: FundCategory.elss,
+    fundType: "Growth",
+    initialNav: 19000n,
+  },
+  {
+    id: "tata-liquid-fund",
+    name: "Tata Liquid Fund",
+    amc: "Tata MF",
+    category: FundCategory.debt,
+    fundType: "Growth",
+    initialNav: 520000n,
   },
 ];
 
 function SeedFunds() {
   const { data: funds, isFetched } = useGetAllFunds();
+  const { data: isAdmin } = useIsCallerAdmin();
   const addFund = useAddFund();
   const seeded = useRef(false);
 
   useEffect(() => {
     if (!isFetched || !funds || seeded.current) return;
-    if (funds.length === 0) {
-      seeded.current = true;
-      const mutateAsync = addFund.mutateAsync;
-      (async () => {
-        for (const fund of SEED_FUNDS) {
-          try {
-            await mutateAsync(fund);
-          } catch {
-            // ignore
-          }
+    if (isAdmin !== true) return;
+
+    const existingIds = new Set(funds.map((f) => f.id));
+    const missing = SEED_FUNDS.filter((f) => !existingIds.has(f.id));
+    if (missing.length === 0) return;
+
+    seeded.current = true;
+    const mutateAsync = addFund.mutateAsync;
+    (async () => {
+      for (const fund of missing) {
+        try {
+          await mutateAsync(fund);
+        } catch {
+          // ignore
         }
-      })();
-    }
-  }, [isFetched, funds, addFund.mutateAsync]);
+      }
+    })();
+  }, [isFetched, funds, isAdmin, addFund.mutateAsync]);
 
   return null;
 }

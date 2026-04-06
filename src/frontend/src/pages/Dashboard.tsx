@@ -115,12 +115,13 @@ export default function Dashboard() {
 
   const trendData = useMemo(() => {
     if (!summary) return [];
-    const base = Number(summary.currentValue) / 100;
     const invested = Number(summary.investedAmount) / 100;
-    return Array.from({ length: 7 }, (_, i) => ({
-      day: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][i],
+    const current = Number(summary.currentValue) / 100;
+    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    return days.map((day, i) => ({
+      day,
       value: Math.round(
-        invested + (base - invested) * (i / 7) * (0.8 + Math.random() * 0.4),
+        invested + (current - invested) * (i / (days.length - 1)),
       ),
     }));
   }, [summary]);
